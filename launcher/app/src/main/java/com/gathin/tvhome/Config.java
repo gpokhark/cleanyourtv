@@ -49,6 +49,7 @@ final class Config {
     final String searchRegion;
     final String searchKeyboard;
     final List<String> searchExtras;
+    final List<String> keyApps;
     final int searchMaxResults;
     final List<String> myServices;
     final String liveTvPackage;
@@ -76,7 +77,7 @@ final class Config {
     final boolean overlayApplied;
 
     private Config(List<String> dockApps, List<String> hiddenApps, List<String> hiddenInputs, List<String> extraClocks, boolean showSearch, boolean showMemory, boolean showLive, boolean showShows, List<String> liveChannels, List<String> memoryProtect, String searchProvider,
-                   String searchRegion, String searchKeyboard, List<String> searchExtras, int searchMaxResults, List<String> myServices, String liveTvPackage, String liveTvAction,
+                   String searchRegion, String searchKeyboard, List<String> searchExtras, List<String> keyApps, int searchMaxResults, List<String> myServices, String liveTvPackage, String liveTvAction,
                    String sourcePanelService, String sourcePanelAction, String inputAction,
                    int columns, int rowsBelowDock, boolean animations, boolean advancedEffects,
                    boolean shamsiDate, boolean moduleCards, boolean reducedMotion, String vpnApp,
@@ -96,6 +97,7 @@ final class Config {
         this.searchRegion = searchRegion;
         this.searchKeyboard = searchKeyboard;
         this.searchExtras = Collections.unmodifiableList(searchExtras);
+        this.keyApps = Collections.unmodifiableList(keyApps);
         this.searchMaxResults = searchMaxResults;
         this.myServices = Collections.unmodifiableList(myServices);
         this.liveTvPackage = liveTvPackage;
@@ -139,6 +141,7 @@ final class Config {
         String searchRegion = res.getString(R.string.search_region).trim();
         String searchKeyboard = res.getString(R.string.search_keyboard).trim();
         List<String> searchExtras = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.search_extras)));
+        List<String> keyApps = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.key_apps)));
         int searchMax = res.getInteger(R.integer.search_max_results);
         List<String> myServices = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.my_services)));
         String liveTv = res.getString(R.string.live_tv_package).trim();
@@ -178,6 +181,7 @@ final class Config {
             searchRegion = string(json, "search_region", searchRegion);
             searchKeyboard = string(json, "search_keyboard", searchKeyboard);
             searchExtras = stringList(json, "search_extras", searchExtras);
+            keyApps = stringList(json, "key_apps", keyApps);
             searchMax = integer(json, "search_max_results", searchMax, 1, 20);
             myServices = stringList(json, "my_services", myServices);
             liveTv = string(json, "live_tv_package", liveTv);
@@ -210,7 +214,7 @@ final class Config {
         // A theme can also switch the wallpaper off while the file is still there.
         if (json != null && json.has("wallpaper") && !bool(json, "wallpaper", true)) wallpaper = null;
 
-        return new Config(dock, hidden, hiddenInputs, extraClocks, showSearch, showMemory, showLive, showShows, liveChannels, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchExtras, searchMax, myServices,
+        return new Config(dock, hidden, hiddenInputs, extraClocks, showSearch, showMemory, showLive, showShows, liveChannels, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchExtras, keyApps, searchMax, myServices,
                 liveTv, liveTvAction, panelService, panelAction, inputAction,
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, moduleCards, reducedMotion, vpn, homeSettings, background,

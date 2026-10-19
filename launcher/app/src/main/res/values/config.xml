@@ -63,6 +63,12 @@
          the text, e.g. YouTube|com.google.android.youtube.tv|https://www.youtube.com/results?search_query={q} -->
     <string-array name="search_extras" />
 
+    <!-- Remote buttons that open an app, "key|android.package|link" (link optional; "action:name" starts an app that has no
+         launcher entry and only answers to its own action). The key is a number or a name
+         such as KEYCODE_PROG_RED. Needs the key service (INPUT_KEY_SERVICE=1). Unrecognised buttons are logged as
+         "TvHome.Keys key N" so the number can be found. -->
+    <string-array name="key_apps" />
+
     <!-- Titles looked up per search; each costs one request after the search itself. -->
     <integer name="search_max_results">8</integer>
     <!-- Services you can watch without paying extra: "Label|android.package|provider ids" -->
