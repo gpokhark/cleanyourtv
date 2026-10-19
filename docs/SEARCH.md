@@ -45,6 +45,15 @@ they cost extra, so they should not count as free.
 - On TVs whose default keyboard is a phone bridge ("use the keyboard on your mobile device"), set
   `search_keyboard` to an on-screen keyboard's id (`ime list -s` over adb) and grant the permission once:
   `pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS`. Search then switches to it when it opens.
+- The catalogue holds titles (movies, series), not user videos, so YouTube is not searched. `search_extras` adds
+  a button beside the filter that sends what you typed to another app's own search page:
+
+  ```json
+  "search_extras": ["YouTube|com.google.android.youtube.tv|https://www.youtube.com/results?search_query={q}"]
+  ```
+
+  Each entry is `Label|android.package|link`, with `{q}` standing for the text (encoded for you). It works with any
+  app that opens a search link.
 - Errors show in the status line: no key pushed, key rejected, quota reached, or no connection.
 
 ## Another data source

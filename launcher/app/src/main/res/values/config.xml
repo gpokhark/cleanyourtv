@@ -58,6 +58,11 @@
     <!-- Apps the Memory screen never lists, as package names. The launcher itself is always left out. -->
     <string-array name="memory_protect" />
 
+    <!-- Buttons next to the filter that send what you typed to another app's own search, for things a title
+         catalogue cannot hold (YouTube is millions of user videos): "Label|android.package|link", where {q} is
+         the text, e.g. YouTube|com.google.android.youtube.tv|https://www.youtube.com/results?search_query={q} -->
+    <string-array name="search_extras" />
+
     <!-- Titles looked up per search; each costs one request after the search itself. -->
     <integer name="search_max_results">8</integer>
     <!-- Services you can watch without paying extra: "Label|android.package|provider ids" -->

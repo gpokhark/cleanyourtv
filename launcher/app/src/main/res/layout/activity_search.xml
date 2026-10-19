@@ -67,12 +67,18 @@
                 android:nextFocusUp="@id/query"
                 android:nextFocusDown="@+id/results" />
 
+            <LinearLayout
+                android:id="@+id/extras"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal" />
+
             <TextView
                 android:id="@+id/status"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="20dp"
+                android:layout_marginStart="16dp"
                 android:text="@string/search_intro"
                 android:textColor="#A6FFFFFF"
                 android:textSize="14sp"

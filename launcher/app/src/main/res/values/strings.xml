@@ -41,6 +41,8 @@
     <string name="memory_needs_permission">One-time setup: run "appops set com.gathin.tvhome GET_USAGE_STATS allow" from your computer.</string>
     <string name="memory_freed">Closed. About %1$d MB freed</string>
     <string name="memory_closed">Closed. The apps were not using much memory.</string>
+    <string name="search_on_app">Search %1$s</string>
+    <string name="search_type_first">Type something to search for first</string>
     <string name="search_hint">Movie or series</string>
     <string name="search_filter_on">Filter: only what I can watch</string>
     <string name="search_filter_off">Filter: showing everything</string>

@@ -78,6 +78,7 @@ public class SearchActivity extends Activity {
 
         Config cfg = Config.load(this);
         useSearchKeyboard(cfg.searchKeyboard);
+        addExtras(cfg.searchExtras);
         mine = MyServices.parse(cfg.myServices);
         maxResults = cfg.searchMaxResults;
         try {
@@ -106,6 +107,39 @@ public class SearchActivity extends Activity {
         });
         refresh();
         query.requestFocus();
+    }
+
+    /** One button per `search_extras` entry, sending the typed text to that app's own search. */
+    private void addExtras(List<String> entries) {
+        android.widget.LinearLayout box = findViewById(R.id.extras);
+        for (String entry : entries) {
+            String[] p = entry.split("\\|", 3);
+            if (p.length < 3 || p[0].trim().isEmpty() || p[2].trim().isEmpty()) continue;
+            final String label = p[0].trim(), pkg = p[1].trim(), template = p[2].trim();
+            TextView b = (TextView) getLayoutInflater().inflate(R.layout.button_search_extra, box, false);
+            b.setText(getString(R.string.search_on_app, label));
+            b.setNextFocusUpId(R.id.query);
+            b.setNextFocusDownId(R.id.results);
+            b.setOnClickListener(v -> searchInApp(label, pkg, template));
+            box.addView(b);
+        }
+    }
+
+    private void searchInApp(String label, String pkg, String template) {
+        String q = query.getText().toString().trim();
+        if (q.isEmpty()) {
+            Toast.makeText(this, R.string.search_type_first, Toast.LENGTH_SHORT).show();
+            query.requestFocus();
+            return;
+        }
+        hideKeyboard();
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(template.replace("{q}", Uri.encode(q))))
+                .setPackage(pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            startActivity(i);
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, getString(R.string.cant_open, label), Toast.LENGTH_SHORT).show();
+        }
     }
 
     /** Makes `keyboard` the default input method if the TV has switched to another (needs WRITE_SECURE_SETTINGS). */
