@@ -136,3 +136,16 @@ Enabled but never bound points at a firmware restriction on auto-starting sidelo
 builds log `OP_AUTO_START` denials). Look at `logcat` for the binding failure before changing settings,
 and do not rewrite the enabled-services list or grant app-ops as a blanket fix. When reporting, give the
 model, build, current user and the relevant redacted lines, not the raw dump.
+## After a firmware update
+
+An update can switch disabled packages back on or bring the stock launcher back as Home. Check with the same list you
+used to disable:
+
+```
+TV_HOST=192.168.1.50 tools/check.sh examples/xiaomi-mi-tv-4a/debloat.txt
+```
+
+It lists packages from the file that are enabled again, and says which app is Home. Add `--fix` to disable the
+packages again, and `--home your.launcher.package` if your launcher is not `com.gathin.tvhome`. Exit status is 0 when
+nothing drifted, 1 when something did, 2 when the TV could not be reached. If Home changed, disable the setup wizard
+first and then the stock launcher (the other order can leave a black screen).
