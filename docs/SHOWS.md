@@ -30,6 +30,8 @@ any season and episode. It is off by default (`show_shows`).
    ```
 
    Pluto's catalogue is its own unofficial web API, so this can stop working after a change on their side.
+   `--order N` sets the position in the Shows list (0 first, ties sort by title). Some Pluto shows are also split into
+   separate series (One Piece has one per saga); each is its own show with its own place.
 2. Copy the catalogue to the TV: `TV_HOST=<tv ip> tools/push-shows.sh shows`
 3. Turn the tile on with `show_shows` (in `config.xml`, or a theme's `config.json`).
 4. Allow the listener, once, so it can read playback (an app cannot do this itself):

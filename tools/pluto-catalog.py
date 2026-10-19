@@ -45,6 +45,7 @@ def main():
     ap.add_argument("--search", help="list series whose name matches, instead of writing a catalogue")
     ap.add_argument("--id", help="short id for the show (file name); default: the slug")
     ap.add_argument("--title", help="name shown on the TV; default: Pluto's name for the series")
+    ap.add_argument("--order", type=int, default=0, help="position in the Shows list (0 = first); ties sort by title")
     ap.add_argument("--out", default="shows", help="folder to write <id>.json into")
     a = ap.parse_args()
     tok = token()
@@ -66,7 +67,8 @@ def main():
         if eps:
             seasons.append({"n": s["episodes"][0]["season"], "episodes": eps})
     seasons.sort(key=lambda s: s["n"])
-    show = {"id": a.id or a.slug, "title": a.title or series["name"], "package": "tv.pluto.android", "seasons": seasons}
+    show = {"id": a.id or a.slug, "title": a.title or series["name"], "package": "tv.pluto.android", "order": a.order,
+            "seasons": seasons}
     os.makedirs(a.out, exist_ok=True)
     path = os.path.join(a.out, show["id"] + ".json")
     with open(path, "w") as f:

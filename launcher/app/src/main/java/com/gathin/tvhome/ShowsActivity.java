@@ -184,6 +184,7 @@ public class ShowsActivity extends Activity {
             ShowStore.Spot next = show.after(here);
             if (next != null) {
                 rows.add(new Row(getString(R.string.shows_done), getString(R.string.shows_done_meta, next.code()), "", () -> {
+                    store.stopWatching();
                     store.set(show.id, next.season.number, next.episode.number, 0);
                     render();
                 }));
@@ -191,6 +192,7 @@ public class ShowsActivity extends Activity {
             ShowStore.Spot first = show.first();
             if (first != null) {
                 rows.add(new Row(getString(R.string.shows_restart), first.code(), "", () -> {
+                    store.stopWatching();
                     store.set(show.id, first.season.number, first.episode.number, 0);
                     render();
                 }));
@@ -266,6 +268,7 @@ public class ShowsActivity extends Activity {
             Toast.makeText(this, R.string.shows_the_end, Toast.LENGTH_LONG).show();
             return;
         }
+        store.stopWatching();
         store.set(show.id, next.season.number, next.episode.number, 0);
         Toast.makeText(this, getString(R.string.shows_place_set, spot.code(), next.code()), Toast.LENGTH_LONG).show();
         mode = Mode.DETAIL;

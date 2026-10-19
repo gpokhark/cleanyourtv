@@ -69,12 +69,14 @@ final class ShowStore {
         final String id;
         final String title;
         final String pkg;
+        final int order;   // position in the Shows list; ties sort by title
         final List<Season> seasons;
 
-        Show(String id, String title, String pkg, List<Season> seasons) {
+        Show(String id, String title, String pkg, int order, List<Season> seasons) {
             this.id = id;
             this.title = title;
             this.pkg = pkg;
+            this.order = order;
             this.seasons = Collections.unmodifiableList(seasons);
         }
 
@@ -129,7 +131,7 @@ final class ShowStore {
         prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
-    /** Every catalogue in the shows folder, by title. Unreadable files are skipped. */
+    /** Every catalogue in the shows folder, by their order and then title. Unreadable files are skipped. */
     static List<Show> load(Context ctx) {
         List<Show> out = new ArrayList<>();
         File base = Config.dir(ctx);
@@ -143,6 +145,8 @@ final class ShowStore {
                 Log.w(TAG, "skipping " + f.getName() + ": " + e);
             }
         }
+        Collections.sort(out, (a, b) -> a.order != b.order ? Integer.compare(a.order, b.order)
+                : a.title.compareToIgnoreCase(b.title));
         return out;
     }
 
@@ -160,7 +164,8 @@ final class ShowStore {
             }
             seasons.add(new Season(s.getInt("n"), eps));
         }
-        return new Show(o.getString("id"), o.optString("title", o.getString("id")), o.getString("package"), seasons);
+        return new Show(o.getString("id"), o.optString("title", o.getString("id")), o.getString("package"),
+                o.optInt("order", 0), seasons);
     }
 
     private static String read(File f) throws IOException {
