@@ -40,6 +40,8 @@ final class Config {
     final List<String> hiddenInputs;
     final boolean showSearch;
     final boolean showMemory;
+    final boolean showLive;
+    final List<String> liveChannels;
     final List<String> memoryProtect;
     final String searchProvider;
     final String searchRegion;
@@ -70,7 +72,7 @@ final class Config {
     /** Whether the overlay file was present and parsed. */
     final boolean overlayApplied;
 
-    private Config(List<String> dockApps, List<String> hiddenApps, List<String> hiddenInputs, boolean showSearch, boolean showMemory, List<String> memoryProtect, String searchProvider,
+    private Config(List<String> dockApps, List<String> hiddenApps, List<String> hiddenInputs, boolean showSearch, boolean showMemory, boolean showLive, List<String> liveChannels, List<String> memoryProtect, String searchProvider,
                    String searchRegion, String searchKeyboard, int searchMaxResults, List<String> myServices, String liveTvPackage, String liveTvAction,
                    String sourcePanelService, String sourcePanelAction, String inputAction,
                    int columns, int rowsBelowDock, boolean animations, boolean advancedEffects,
@@ -82,6 +84,8 @@ final class Config {
         this.hiddenInputs = Collections.unmodifiableList(hiddenInputs);
         this.showSearch = showSearch;
         this.showMemory = showMemory;
+        this.showLive = showLive;
+        this.liveChannels = Collections.unmodifiableList(liveChannels);
         this.memoryProtect = Collections.unmodifiableList(memoryProtect);
         this.searchProvider = searchProvider;
         this.searchRegion = searchRegion;
@@ -120,6 +124,8 @@ final class Config {
         List<String> hiddenInputs = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.hidden_inputs)));
         boolean showSearch = res.getBoolean(R.bool.show_search);
         boolean showMemory = res.getBoolean(R.bool.show_memory);
+        boolean showLive = res.getBoolean(R.bool.show_live);
+        List<String> liveChannels = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.live_channels)));
         List<String> memoryProtect = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.memory_protect)));
         String searchProvider = res.getString(R.string.search_provider).trim();
         String searchRegion = res.getString(R.string.search_region).trim();
@@ -154,6 +160,8 @@ final class Config {
             hiddenInputs = stringList(json, "hidden_inputs", hiddenInputs);
             showSearch = bool(json, "show_search", showSearch);
             showMemory = bool(json, "show_memory", showMemory);
+            showLive = bool(json, "show_live", showLive);
+            liveChannels = stringList(json, "live_channels", liveChannels);
             memoryProtect = stringList(json, "memory_protect", memoryProtect);
             searchProvider = string(json, "search_provider", searchProvider);
             searchRegion = string(json, "search_region", searchRegion);
@@ -190,7 +198,7 @@ final class Config {
         // A theme can also switch the wallpaper off while the file is still there.
         if (json != null && json.has("wallpaper") && !bool(json, "wallpaper", true)) wallpaper = null;
 
-        return new Config(dock, hidden, hiddenInputs, showSearch, showMemory, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchMax, myServices,
+        return new Config(dock, hidden, hiddenInputs, showSearch, showMemory, showLive, liveChannels, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchMax, myServices,
                 liveTv, liveTvAction, panelService, panelAction, inputAction,
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, moduleCards, reducedMotion, vpn, homeSettings, background,

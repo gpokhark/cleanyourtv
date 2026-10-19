@@ -36,6 +36,12 @@
          For TVs whose default keyboard is a phone bridge with no on-screen keys ("use the keyboard on your mobile
          device"). Needs: adb shell pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS -->
     <string name="search_keyboard" translatable="false"></string>
+    <!-- Live pill: your favourite free live channels. Each entry is "Name|android.package|link". The link opens that
+         channel in the app (Pluto TV accepts https://pluto.tv/us/live-tv/<channel>); leave it empty to just open the
+         app. Off by default. See docs/LIVE.md -->
+    <bool name="show_live">false</bool>
+    <string-array name="live_channels" />
+
     <!-- Memory pill: lists the apps used recently so you can close the ones you pick (or all). Off by default.
          Needs once: adb shell appops set com.gathin.tvhome GET_USAGE_STATS allow  (see docs/MEMORY.md) -->
     <bool name="show_memory">false</bool>

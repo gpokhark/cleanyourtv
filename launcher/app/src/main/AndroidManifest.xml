@@ -76,6 +76,12 @@
             android:windowSoftInputMode="stateVisible|adjustResize"
             android:screenOrientation="landscape" />
         <activity
+            android:name=".LiveActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+
+        <activity
             android:name=".MemoryActivity"
             android:exported="false"
             android:excludeFromRecents="true"

@@ -171,6 +171,13 @@
                     android:nextFocusDown="@+id/grid" />
 
                 <TextView
+                    android:id="@+id/btnLive"
+                    style="@style/TopButton"
+                    android:text="@string/live"
+                    android:drawableStart="@drawable/ic_livetv"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
                     android:id="@+id/btnInputs"
                     style="@style/TopButton"
                     android:text="@string/inputs"

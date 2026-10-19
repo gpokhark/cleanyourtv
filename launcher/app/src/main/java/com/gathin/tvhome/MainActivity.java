@@ -102,6 +102,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private View btnInputs;
     private View btnSearch;
     private View btnMemory;
+    private View btnLive;
     private TextView btnWifi;
     private TextView shamsiDate;
     private boolean shamsi;
@@ -316,6 +317,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnSearch = findViewById(R.id.btnSearch);
         btnSearch.setVisibility(cfg.showSearch ? View.VISIBLE : View.GONE);
         btnSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        btnLive = findViewById(R.id.btnLive);
+        btnLive.setVisibility(cfg.showLive ? View.VISIBLE : View.GONE);
+        btnLive.setOnClickListener(v -> startActivity(new Intent(this, LiveActivity.class)));
         btnMemory = findViewById(R.id.btnMemory);
         btnMemory.setVisibility(cfg.showMemory ? View.VISIBLE : View.GONE);
         btnMemory.setOnClickListener(v -> startActivity(new Intent(this, MemoryActivity.class)));
@@ -343,8 +347,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 focusTile(lastFocused % COLUMNS);
                 return true;
             }
-            // The first pill showing: Search, else Inputs, else Wi-Fi.
+            // The first pill showing: Search, else Live, Inputs, Wi-Fi.
             int firstButton = btnSearch.getVisibility() == View.VISIBLE ? R.id.btnSearch
+                    : btnLive.getVisibility() == View.VISIBLE ? R.id.btnLive
                     : btnInputs.getVisibility() == View.VISIBLE ? R.id.btnInputs : R.id.btnWifi;
             int leftButton = rtlMenuBar ? R.id.btnSettings : firstButton;
             int rightButton = rtlMenuBar ? firstButton : R.id.btnSettings;
@@ -353,6 +358,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         };
         btnSearch.setOnKeyListener(pillKeys);
         btnMemory.setOnKeyListener(pillKeys);
+        btnLive.setOnKeyListener(pillKeys);
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
@@ -920,6 +926,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return new Intent(standardAction);   // nothing found: let open() show the can't-open toast
     }
 
+    /** With six or more pills the clock block runs out of room, so tighten them: smaller text and padding. */
+    private void compactPills() {
+        View[] pills = {btnSearch, btnLive, btnInputs, btnWifi, btnMemory, findViewById(R.id.btnSettings)};
+        int shown = 0;
+        for (View p : pills) if (p != null && p.getVisibility() == View.VISIBLE) shown++;
+        boolean tight = shown >= 6;
+        for (View p : pills) {
+            if (!(p instanceof TextView)) continue;
+            TextView t = (TextView) p;
+            t.setTextSize(tight ? 14 : 15);
+            t.setPadding((int) ((tight ? 12 : 16) * density), 0, (int) ((tight ? 15 : 20) * density), 0);
+            t.setCompoundDrawablePadding((int) ((tight ? 6 : 9) * density));
+        }
+    }
+
     /** Hides the Inputs pill when it would have nothing to list: streaming boxes have no HDMI-in, AV or tuner. */
     private void updateInputsButton() {
         boolean any = liveTvIntent() != null || !sourcePanelService.isEmpty();
@@ -933,6 +954,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         }
         btnInputs.setVisibility(any ? View.VISIBLE : View.GONE);
+        compactPills();
     }
 
     /** The Live TV app's launch intent: its leanback entry point, or the configured action if it has none. */
