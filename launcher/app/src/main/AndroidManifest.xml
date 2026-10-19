@@ -8,6 +8,10 @@
 
     <!-- Only the Search screen uses it, when you search; nothing polls in the background. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Memory screen: stops the background processes of the apps you pick, and lists the apps used recently. The
+         usage permission is granted over adb: appops set com.gathin.tvhome GET_USAGE_STATS allow -->
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <!-- Only used when search_keyboard is set, and only once granted over adb. -->
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -71,6 +75,12 @@
             android:excludeFromRecents="true"
             android:windowSoftInputMode="stateVisible|adjustResize"
             android:screenOrientation="landscape" />
+        <activity
+            android:name=".MemoryActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+
         <activity
             android:name=".HomeSettingsActivity"
             android:exported="false"

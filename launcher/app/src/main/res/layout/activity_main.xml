@@ -188,6 +188,13 @@
                     android:nextFocusDown="@+id/grid" />
 
                 <TextView
+                    android:id="@+id/btnMemory"
+                    style="@style/TopButton"
+                    android:text="@string/memory"
+                    android:drawableStart="@drawable/ic_memory"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
                     android:id="@+id/btnSettings"
                     style="@style/TopButton"
                     android:text="@string/settings"

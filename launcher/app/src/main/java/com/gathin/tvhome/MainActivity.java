@@ -101,6 +101,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextView greeting;
     private View btnInputs;
     private View btnSearch;
+    private View btnMemory;
     private TextView btnWifi;
     private TextView shamsiDate;
     private boolean shamsi;
@@ -315,6 +316,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnSearch = findViewById(R.id.btnSearch);
         btnSearch.setVisibility(cfg.showSearch ? View.VISIBLE : View.GONE);
         btnSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        btnMemory = findViewById(R.id.btnMemory);
+        btnMemory.setVisibility(cfg.showMemory ? View.VISIBLE : View.GONE);
+        btnMemory.setOnClickListener(v -> startActivity(new Intent(this, MemoryActivity.class)));
         View btnSettings = findViewById(R.id.btnSettings);
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> openNetworkPill());
@@ -348,6 +352,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == rightButton;
         };
         btnSearch.setOnKeyListener(pillKeys);
+        btnMemory.setOnKeyListener(pillKeys);
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);

@@ -36,6 +36,12 @@
          For TVs whose default keyboard is a phone bridge with no on-screen keys ("use the keyboard on your mobile
          device"). Needs: adb shell pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS -->
     <string name="search_keyboard" translatable="false"></string>
+    <!-- Memory pill: lists the apps used recently so you can close the ones you pick (or all). Off by default.
+         Needs once: adb shell appops set com.gathin.tvhome GET_USAGE_STATS allow  (see docs/MEMORY.md) -->
+    <bool name="show_memory">false</bool>
+    <!-- Apps the Memory screen never lists, as package names. The launcher itself is always left out. -->
+    <string-array name="memory_protect" />
+
     <!-- Titles looked up per search; each costs one request after the search itself. -->
     <integer name="search_max_results">8</integer>
     <!-- Services you can watch without paying extra: "Label|android.package|provider ids" -->

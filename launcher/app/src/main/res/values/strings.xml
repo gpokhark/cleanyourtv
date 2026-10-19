@@ -5,6 +5,17 @@
     <string name="wifi">Wi-Fi</string>
     <string name="settings">Settings</string>
     <string name="search">Search</string>
+    <string name="memory">Memory</string>
+    <string name="memory_header">%1$s free of %2$s · swap %3$d%% used</string>
+    <string name="memory_close_selected">Close selected (%1$d)</string>
+    <string name="memory_close_all">Close all</string>
+    <string name="memory_state_closed">Closed</string>
+    <string name="memory_none">No apps used recently.</string>
+    <string name="memory_hint">Used in the last day. OK to choose, then close.</string>
+    <string name="memory_loading">Checking what is running…</string>
+    <string name="memory_needs_permission">One-time setup: run "appops set com.gathin.tvhome GET_USAGE_STATS allow" from your computer.</string>
+    <string name="memory_freed">Closed. About %1$d MB freed</string>
+    <string name="memory_closed">Closed. The apps were not using much memory.</string>
     <string name="search_hint">Movie or series</string>
     <string name="search_filter_on">Filter: only what I can watch</string>
     <string name="search_filter_off">Filter: showing everything</string>
