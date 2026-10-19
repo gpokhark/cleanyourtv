@@ -54,7 +54,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     }
 
     static final class Entry {
-        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2;
+        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2, SHOWS = 3;
 
         final int kind;
         final String label;
@@ -118,6 +118,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     private final boolean animations;
     private final boolean advancedEffects;
     private final boolean showHomeSettings;
+    private final boolean showShows;
     /** Calmer motion for weak GPUs (config.xml, reduced_motion): no overshoot, shorter fades. */
     private final boolean reducedMotion;
     private final List<Entry> items = new ArrayList<>();
@@ -131,6 +132,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         this.animations = cfg.animations;
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
         this.showHomeSettings = cfg.showHomeSettingsShortcut;
+        this.showShows = cfg.showShows;
         this.reducedMotion = cfg.reducedMotion;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
@@ -165,6 +167,11 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
                 fresh.add(new Entry(Cards.cleanLabel(String.valueOf(ri.loadLabel(pm)), pkg), component, banner, icon));
             }
         }
+        // The Shows tile sits with the module cards: right after the dock, before the alphabetical grid.
+        if (showShows) {
+            fresh.add(new Entry(Entry.SHOWS, ctx.getString(R.string.shows),
+                    new ComponentName(ctx, ShowsActivity.class), null, ctx.getDrawable(R.drawable.ic_shows), null, 0));
+        }
         Collections.sort(fresh, (a, b) -> {
             int fa = favourites.indexOf(a.pkg), fb = favourites.indexOf(b.pkg);
             if (fa >= 0 || fb >= 0) {
@@ -173,7 +180,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
                 return Integer.compare(fa, fb);
             }
             // Cards come right after the configured dock apps, before the alphabetical grid.
-            boolean ca = a.kind == Entry.CARD, cb = b.kind == Entry.CARD;
+            boolean ca = a.kind == Entry.CARD || a.kind == Entry.SHOWS, cb = b.kind == Entry.CARD || b.kind == Entry.SHOWS;
             if (ca != cb) return ca ? -1 : 1;
             return a.label.compareToIgnoreCase(b.label);
         });
@@ -268,6 +275,10 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         if (e.kind == Entry.HOME_SETTINGS) {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            return;
+        }
+        if (e.kind == Entry.SHOWS) {
+            ctx.startActivity(new Intent(ctx, ShowsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             return;
         }
         Intent i = new Intent(Intent.ACTION_MAIN)

@@ -76,6 +76,24 @@
             android:windowSoftInputMode="stateVisible|adjustResize"
             android:screenOrientation="landscape" />
         <activity
+            android:name=".ShowsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape" />
+
+        <!-- Reads the playback of the show being watched, to keep your place. Does nothing until enabled over adb:
+             cmd notification allow_listener com.gathin.tvhome/com.gathin.tvhome.MediaWatcher (docs/SHOWS.md) -->
+        <service
+            android:name=".MediaWatcher"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <activity
             android:name=".LiveActivity"
             android:exported="false"
             android:excludeFromRecents="true"
