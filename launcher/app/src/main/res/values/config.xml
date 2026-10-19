@@ -25,6 +25,11 @@
          exist on the TV but that you never use, or that report "Connected" with nothing plugged in. -->
     <string-array name="hidden_inputs" />
 
+    <!-- Small extra clocks under the date: a time zone id (America/New_York) or "Label|zone id" (IST|Asia/Kolkata).
+         A bare id shows the TV's own abbreviation (EST or EDT depending on the date), which can read GMT+05:30 for
+         zones its language has no short name for: give those a label. Empty = none. -->
+    <string-array name="extra_clocks" />
+
     <!-- Search pill: look up a movie or series and see which of your services carry it at no extra cost
          (included in a subscription, or free). Off by default. Setup: docs/SEARCH.md -->
     <bool name="show_search">false</bool>

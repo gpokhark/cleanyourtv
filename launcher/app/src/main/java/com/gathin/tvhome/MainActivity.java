@@ -50,6 +50,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -228,6 +229,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         greeting = findViewById(R.id.greeting);
         btnWifi = findViewById(R.id.btnWifi);
         shamsiDate = findViewById(R.id.shamsiDate);
+        addExtraClocks(cfg.extraClocks);
         shamsi = cfg.shamsiDate;
         if (shamsi) {
             shamsiDate.setVisibility(View.VISIBLE);
@@ -924,6 +926,44 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 "com.xiaomi.mitv.settings", "com.xiaomi.mitv.settings.entry.MainActivity"));
         if (i.resolveActivity(getPackageManager()) != null) return i;
         return new Intent(standardAction);   // nothing found: let open() show the can't-open toast
+    }
+
+    /** Small clocks for other time zones under the date, each as "EDT 3:45 PM", separated by dots. */
+    private void addExtraClocks(List<String> zones) {
+        LinearLayout box = findViewById(R.id.extraClocks);
+        box.removeAllViews();
+        int shown = 0;
+        for (String entry : zones) {
+            // "America/New_York" shows its own abbreviation (EST or EDT by date); "IST|Asia/Kolkata" fixes the label,
+            // for zones this TV's language has no short name for (it would say GMT+05:30).
+            int bar = entry.indexOf('|');
+            String label = bar > 0 ? entry.substring(0, bar).trim() : null;
+            String id = (bar > 0 ? entry.substring(bar + 1) : entry).trim();
+            if (!java.util.Arrays.asList(java.util.TimeZone.getAvailableIDs()).contains(id)) continue;
+            if (shown++ > 0) {
+                TextView dot = new TextView(this);
+                dot.setText("  \u00B7  ");
+                dot.setTextSize(13);
+                dot.setTextColor(0x66FFFFFF);
+                box.addView(dot);
+            }
+            box.addView(extraClock(id, label));
+        }
+        box.setVisibility(shown > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    private TextClock extraClock(String zone, String label) {
+        TextClock t = new TextClock(this);
+        t.setTextSize(13);
+        t.setTextColor(0x99FFFFFF);
+        t.setTypeface(getResources().getFont(R.font.outfit));
+        t.setSingleLine(true);
+        t.setIncludeFontPadding(false);
+        t.setTimeZone(zone);
+        String prefix = label == null ? "zzz" : "'" + label.replace("'", "") + "'";
+        t.setFormat12Hour(prefix + " h:mm a");
+        t.setFormat24Hour(prefix + " HH:mm");
+        return t;
     }
 
     /** With six or more pills the clock block runs out of room, so tighten them: smaller text and padding. */
