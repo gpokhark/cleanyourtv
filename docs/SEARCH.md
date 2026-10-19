@@ -42,6 +42,9 @@ they cost extra, so they should not count as free.
   in to still shows as available. Catalogues also change, so availability can lag by a few days.
 - The free Watchmode plan has no deep links, so OK opens the app rather than the title. An app that is not
   installed opens its Play Store page. Where a title is on two of your services, a picker asks which.
+- On TVs whose default keyboard is a phone bridge ("use the keyboard on your mobile device"), set
+  `search_keyboard` to an on-screen keyboard's id (`ime list -s` over adb) and grant the permission once:
+  `pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS`. Search then switches to it when it opens.
 - Errors show in the status line: no key pushed, key rejected, quota reached, or no connection.
 
 ## Another data source

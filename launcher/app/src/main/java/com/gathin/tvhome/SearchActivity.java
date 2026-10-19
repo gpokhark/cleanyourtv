@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -76,6 +77,7 @@ public class SearchActivity extends Activity {
         status = findViewById(R.id.status);
 
         Config cfg = Config.load(this);
+        useSearchKeyboard(cfg.searchKeyboard);
         mine = MyServices.parse(cfg.myServices);
         maxResults = cfg.searchMaxResults;
         try {
@@ -104,6 +106,19 @@ public class SearchActivity extends Activity {
         });
         refresh();
         query.requestFocus();
+    }
+
+    /** Makes `keyboard` the default input method if the TV has switched to another (needs WRITE_SECURE_SETTINGS). */
+    private void useSearchKeyboard(String keyboard) {
+        if (keyboard.isEmpty()) return;
+        try {
+            String now = Settings.Secure.getString(getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
+            if (!keyboard.equals(now)) {
+                Settings.Secure.putString(getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD, keyboard);
+            }
+        } catch (SecurityException e) {
+            // Not granted: the TV's own keyboard is used as it is.
+        }
     }
 
     @Override

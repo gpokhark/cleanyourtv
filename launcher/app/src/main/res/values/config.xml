@@ -32,6 +32,10 @@
     <string name="search_provider" translatable="false">watchmode</string>
     <!-- Country whose catalogue is checked (ISO code, e.g. US, GB, CA). -->
     <string name="search_region" translatable="false">US</string>
+    <!-- Keyboard to switch to when Search opens, as "package/.ImeService" (see `ime list -s`); empty = leave it.
+         For TVs whose default keyboard is a phone bridge with no on-screen keys ("use the keyboard on your mobile
+         device"). Needs: adb shell pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS -->
+    <string name="search_keyboard" translatable="false"></string>
     <!-- Titles looked up per search; each costs one request after the search itself. -->
     <integer name="search_max_results">8</integer>
     <!-- Services you can watch without paying extra: "Label|android.package|provider ids" -->
