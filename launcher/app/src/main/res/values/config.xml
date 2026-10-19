@@ -25,6 +25,18 @@
          exist on the TV but that you never use, or that report "Connected" with nothing plugged in. -->
     <string-array name="hidden_inputs" />
 
+    <!-- Search pill: look up a movie or series and see which of your services carry it at no extra cost
+         (included in a subscription, or free). Off by default. Setup: docs/SEARCH.md -->
+    <bool name="show_search">false</bool>
+    <!-- Where availability comes from. Only "watchmode" so far; see SearchProviders for adding another. -->
+    <string name="search_provider" translatable="false">watchmode</string>
+    <!-- Country whose catalogue is checked (ISO code, e.g. US, GB, CA). -->
+    <string name="search_region" translatable="false">US</string>
+    <!-- Titles looked up per search; each costs one request after the search itself. -->
+    <integer name="search_max_results">8</integer>
+    <!-- Services you can watch without paying extra: "Label|android.package|provider ids" -->
+    <string-array name="my_services" />
+
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
     <string name="live_tv_package" translatable="false">com.mediatek.wwtv.tvcenter</string>
 
