@@ -66,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -123,6 +124,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean reducedMotion;
     /** hidden_apps as the adapter sees them (config.xml or a theme's config.json): a hidden app gets no card either. */
     private Set<String> hiddenApps = Collections.emptySet();
+    /** Inputs menu rows never shown: matched against an input's label (exact) or its id (substring). */
+    private List<String> hiddenInputs = Collections.emptyList();
     private List<Cards.Card> cards = Collections.emptyList();
     /** The grid has been laid out and focused since the last resume; the card prompt waits for this. */
     private boolean tilesReady;
@@ -232,6 +235,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         vpnApp = cfg.vpnApp;
         moduleCards = cfg.moduleCards;
         hiddenApps = new HashSet<>(cfg.hiddenApps);
+        hiddenInputs = cfg.hiddenInputs;
 
         grid = findViewById(R.id.grid);
         rtlAppGrid = getResources().getBoolean(R.bool.rtl_app_grid);
@@ -984,6 +988,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         boolean tunerIsHw = false;
         if (tim != null) {
             List<TvInputInfo> inputs = new ArrayList<>(tim.getTvInputList());
+            // A CEC device on a port (a stick, a console) is registered as a child of that port's input and
+            // would list the same port twice, so keep only the port.
+            Set<String> ids = new HashSet<>();
+            for (TvInputInfo info : inputs) ids.add(info.getId());
+            for (Iterator<TvInputInfo> it = inputs.iterator(); it.hasNext(); ) {
+                TvInputInfo info = it.next();
+                String parent = info.getParentId();
+                if (info.getType() == TvInputInfo.TYPE_HDMI && parent != null && ids.contains(parent)) it.remove();
+                else if (isHiddenInput(info)) it.remove();
+            }
             // HDMI ports first in port order, then AV and the rest.
             Collections.sort(inputs, (a, b) -> {
                 boolean ha = a.getType() == TvInputInfo.TYPE_HDMI, hb = b.getType() == TvInputInfo.TYPE_HDMI;
@@ -1050,6 +1064,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         int alignment = getResources().getBoolean(R.bool.rtl_menu_bar) ? Gravity.END : Gravity.START;
         dropIn(popup, panel, anchor, alignment);
         rows.getChildAt(0).requestFocus();
+    }
+
+    private boolean isHiddenInput(TvInputInfo info) {
+        CharSequence label = info.loadLabel(this);
+        for (String h : hiddenInputs) {
+            if (h.isEmpty()) continue;
+            if (label != null && label.toString().equalsIgnoreCase(h) || info.getId().contains(h)) return true;
+        }
+        return false;
     }
 
     private PopupWindow glassPopup(View panel, int width) {

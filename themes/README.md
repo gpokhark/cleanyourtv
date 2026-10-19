@@ -27,6 +27,7 @@ is ignored, and a file that doesn't parse is ignored as a whole, so a theme can 
 |---|---|---|
 | `dock_apps` | list of package names | The dock row, in order; missing apps are skipped |
 | `hidden_apps` | list of package names | Never shown as tiles |
+| `hidden_inputs` | list of input labels or id fragments | Never shown in the Inputs menu, e.g. `["AV"]` |
 | `live_tv_package`, `live_tv_action` | string | The Live TV app and, if it has no leanback entry, the action to start it with |
 | `source_panel_service`, `source_panel_action` | string | The TV's own source panel, for sets with no TvInputManager |
 | `input_action` | string | Action sent with an HDMI/AV row's channel URI when nothing handles the standard `VIEW` (XGIMI: `com.xgimi.action.hdmiPlayer`) |

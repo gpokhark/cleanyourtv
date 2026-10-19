@@ -21,6 +21,10 @@
         <item>com.mitv.gallery</item>
     </string-array>
 
+    <!-- Inputs menu rows never shown: an input's label (exact, any case) or part of its id. For ports that
+         exist on the TV but that you never use, or that report "Connected" with nothing plugged in. -->
+    <string-array name="hidden_inputs" />
+
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
     <string name="live_tv_package" translatable="false">com.mediatek.wwtv.tvcenter</string>
 
