@@ -79,7 +79,13 @@ final class MemoryTrim {
             am.killBackgroundProcesses(pkg);
             closed++;
         }
-        Log.i(TAG, "closed " + closed + " apps, kept " + keep.size() + ", free " + before + " MB before");
+        // The request is not the result: some TVs ignore it, so say how much memory actually came back.
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            return;
+        }
+        Log.i(TAG, "asked to close " + closed + " apps, kept " + keep.size() + ", free memory " + before + " -> " + availMb(am) + " MB");
     }
 
     /** Apps with a playing media session. Needs the notification listener; without it nothing is known. */

@@ -48,3 +48,17 @@ It is off by default. It needs the same usage-statistics permission as the pill.
 `"recent_apps": 5` puts the five apps you used most recently, apart from the dock, right after the dock and the Shows
 tile, newest first. It is a sort order in the existing grid, so it adds no screen and nothing runs in the background.
 `0` (the default) turns it off. It uses the last seven days of usage statistics.
+
+## When "Close all" does nothing
+
+The pill asks Android to close each app (`killBackgroundProcesses`). Some TV firmware ignores that request from an
+ordinary app, even though the same close works from `adb shell am kill <package>`. The pill and auto-trim then change
+nothing: the apps stay in memory and swap stays full.
+
+- The pill measures how much memory came back. If it was 20 MB or less it says "Nothing was freed" and does not mark
+  the apps as closed. Auto-trim logs it too: `adb logcat -s TvHome.Trim:I` prints "asked to close N apps ... free memory
+  X -> Y MB". If X and Y are close, the TV is ignoring the request.
+- To check by hand: note a background app's process id (`pidof <package>`), press Close all, and look again. A real close
+  shows `ActivityManager: Killing ... kill background` in `adb logcat`.
+- What works on such a TV is closing from the computer over adb (`am kill-all`, `am force-stop <package>`), or lowering
+  Android's "Background process limit" in Developer options if the TV offers it.

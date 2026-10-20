@@ -237,6 +237,10 @@ public class MemoryActivity extends Activity {
         ui.postDelayed(() -> {
             if (destroyed) return;
             long gained = (availKb(am) - before) / 1024;
+            if (gained <= 20) {
+                // Nothing came back: the apps were small, or this TV ignores the request. Do not call them closed.
+                for (String pkg : targets) closedAt.remove(pkg);
+            }
             Toast.makeText(this, gained > 20 ? getString(R.string.memory_freed, (int) gained) : getString(R.string.memory_closed),
                     Toast.LENGTH_LONG).show();
             load();
