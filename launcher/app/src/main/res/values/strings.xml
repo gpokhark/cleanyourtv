@@ -32,7 +32,10 @@
     <string name="shows_youtube">Last on YouTube</string>
     <string name="shows_youtube_none">Nothing yet</string>
     <string name="shows_youtube_empty">Nothing yet. Watch a video for 30 seconds and it shows up here.</string>
-    <string name="shows_youtube_hint">OK searches YouTube for it; YouTube remembers where you stopped</string>
+    <string name="shows_youtube_hint">OK searches YouTube for it · hold OK to remove it · the last 20 are kept</string>
+    <string name="shows_youtube_removed">Removed</string>
+    <string name="shows_youtube_row">%1$s · hold OK to remove</string>
+    <string name="shows_youtube_row_bare">Hold OK to remove</string>
     <string name="shows_listener_hint">Turn on tracking to save where you stop: see docs/SHOWS.md</string>
     <string name="memory">Memory</string>
     <string name="memory_header">%1$s free of %2$s · swap %3$d%% used</string>

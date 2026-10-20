@@ -138,7 +138,7 @@ final class ShowStore {
         }
     }
 
-    private static final int MAX_VIDEOS = 10;
+    private static final int MAX_VIDEOS = 20;
 
     private final SharedPreferences prefs;
 
@@ -248,13 +248,28 @@ final class ShowStore {
         return out;
     }
 
-    /** Puts a video at the top; watching it again moves it up instead of listing it twice. */
+    /** Puts a video at the top; watching it again moves it up instead of listing it twice. Keeps the newest MAX_VIDEOS. */
     void addYoutube(String title, String channel) {
         List<Video> all = youtube();
+        removeFrom(all, title, channel);
+        all.add(0, new Video(title, channel, System.currentTimeMillis()));
+        saveYoutube(all);
+    }
+
+    /** Takes one video off the list. */
+    void removeYoutube(String title, String channel) {
+        List<Video> all = youtube();
+        removeFrom(all, title, channel);
+        saveYoutube(all);
+    }
+
+    private static void removeFrom(List<Video> all, String title, String channel) {
         for (int i = all.size() - 1; i >= 0; i--) {
             if (all.get(i).title.equals(title) && all.get(i).channel.equals(channel)) all.remove(i);
         }
-        all.add(0, new Video(title, channel, System.currentTimeMillis()));
+    }
+
+    private void saveYoutube(List<Video> all) {
         JSONArray a = new JSONArray();
         try {
             for (int i = 0; i < all.size() && i < MAX_VIDEOS; i++) {

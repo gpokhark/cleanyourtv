@@ -55,6 +55,7 @@ public class ShowsActivity extends Activity {
     private Mode mode = Mode.SHOWS;
     private ShowStore.Show show;
     private ShowStore.Season season;
+    private int youtubeFocus;   // where the cursor goes after a video is removed
     private String youtubePkg = "";   // empty = no "Last on YouTube" entry
     private boolean soleShow;   // with a single show the list level is skipped
     private TextView title, sub, kicker;
@@ -135,7 +136,7 @@ public class ShowsActivity extends Activity {
             title.setText(R.string.shows_none);
             sub.setText("");
         } else if (mode == Mode.YOUTUBE) {
-            renderYoutube();
+            focus = renderYoutube();
         } else if (mode == Mode.SHOWS || show == null) {
             kicker.setText(R.string.shows);
             title.setText(R.string.shows);
@@ -175,16 +176,29 @@ public class ShowsActivity extends Activity {
         });
     }
 
-    private void renderYoutube() {
+    /** The list of videos; the cursor goes where a removal left it, or to the top. Returns that position. */
+    private int renderYoutube() {
         kicker.setText(R.string.shows);
         title.setText(R.string.shows_youtube);
         List<ShowStore.Video> seen = store.youtube();
         sub.setText(getString(seen.isEmpty() ? R.string.shows_youtube_empty : R.string.shows_youtube_hint));
         for (ShowStore.Video v : seen) {
-            rows.add(new Row(v.title, v.channel,
+            rows.add(new Row(v.title, v.channel.isEmpty() ? getString(R.string.shows_youtube_row_bare)
+                    : getString(R.string.shows_youtube_row, v.channel),
                     DateUtils.getRelativeTimeSpanString(v.at, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString(),
-                    () -> openYoutube(v)));
+                    () -> openYoutube(v), () -> removeYoutube(v, seen.indexOf(v))));
         }
+        int at = Math.max(0, Math.min(youtubeFocus, seen.size() - 1));
+        youtubeFocus = 0;
+        return at;
+    }
+
+    /** Hold OK on a video: takes it off the list and keeps the cursor on the next one. */
+    private void removeYoutube(ShowStore.Video v, int position) {
+        store.removeYoutube(v.title, v.channel);
+        youtubeFocus = position;
+        Toast.makeText(this, R.string.shows_youtube_removed, Toast.LENGTH_SHORT).show();
+        render();
     }
 
     /** YouTube's own search for the video: the app picks up where you stopped, as it does for any video you reopen. */

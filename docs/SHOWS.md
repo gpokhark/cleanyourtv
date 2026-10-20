@@ -49,7 +49,7 @@ Your progress stays on the TV, in the launcher's own storage, when you push a ne
 YouTube has no catalogue or fixed place to keep, so it is handled differently. The app tells other apps only the title
 and channel of the video it is playing (and its length), not a link. Its position looked right for one long video and
 near zero for others, so it is not used. So the Shows screen gets
-one extra entry, "Last on YouTube", listing the last ten videos you watched, newest first.
+one extra entry, "Last on YouTube", listing the last twenty videos you watched, newest first.
 
 ```json
 "youtube_package": "com.google.android.youtube.tv"
@@ -57,7 +57,7 @@ one extra entry, "Last on YouTube", listing the last ten videos you watched, new
 
 - Empty (the default) turns it off. On Fire TV the package is `com.amazon.firetv.youtube`.
 - A video is saved after it has played for about 30 seconds, so flicking through videos does not fill the list.
-  Watching it again moves it back to the top.
+  Watching it again moves it back to the top. Only the newest 20 are kept. Hold OK on a video to remove it from the list; each row says so under its title.
 - OK on a video opens YouTube's own search for its title and channel. Pick the right result; YouTube picks up where you
   stopped, the way it does for any video you reopen while signed in. If the search shows a different upload first, the
   match is by name, so it is not exact.
