@@ -57,6 +57,15 @@
     <bool name="show_memory">false</bool>
     <!-- Apps the Memory screen never lists, as package names. The launcher itself is always left out. -->
     <string-array name="memory_protect" />
+    <!-- Close idle apps by itself when Home is pressed and free memory is low (see docs/MEMORY.md). Off by default.
+         Needs the same usage-statistics permission as the Memory pill. The app you just left is kept. -->
+    <bool name="auto_trim">false</bool>
+    <!-- "Low" for auto_trim: free memory in MB below which it runs. -->
+    <integer name="auto_trim_below_mb">500</integer>
+
+    <!-- Apps used most recently, put in the grid right after the dock, newest first. 0 = off. Needs the
+         usage-statistics permission (see docs/MEMORY.md). -->
+    <integer name="recent_apps">0</integer>
 
     <!-- Buttons next to the filter that send what you typed to another app's own search, for things a title
          catalogue cannot hold (YouTube is millions of user videos): "Label|android.package|link", where {q} is

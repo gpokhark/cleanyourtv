@@ -26,3 +26,25 @@ adb shell appops set com.gathin.tvhome GET_USAGE_STATS allow
 ```
 
 (or `tools/tv.py "appops set com.gathin.tvhome GET_USAGE_STATS allow"`). Without it the screen says so.
+
+## Close idle apps by itself (auto_trim)
+
+`auto_trim` runs the same close as the pill's "close all" when you press Home, so you do not have to open the pill.
+It is off by default. It needs the same usage-statistics permission as the pill.
+
+```json
+"auto_trim": true,
+"auto_trim_below_mb": 500
+```
+
+- It runs only when free memory is below `auto_trim_below_mb` (default 500 MB), and at most once every 10 minutes.
+- It keeps the app you used just before Home, anything with a playing media session, the apps in `memory_protect`, and
+  the launcher. Seeing what is playing needs the Shows notification listener to be on (`docs/SHOWS.md`); without it,
+  playing apps are protected only by Android itself, which does not stop an app that is playing in the foreground.
+- It starts two seconds after Home so the screen is not held up. `adb logcat -s TvHome.Trim` shows each run.
+
+## Recently used apps on Home (recent_apps)
+
+`"recent_apps": 5` puts the five apps you used most recently, apart from the dock, right after the dock and the Shows
+tile, newest first. It is a sort order in the existing grid, so it adds no screen and nothing runs in the background.
+`0` (the default) turns it off. It uses the last seven days of usage statistics.

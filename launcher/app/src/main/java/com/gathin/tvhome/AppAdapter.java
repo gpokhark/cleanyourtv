@@ -119,6 +119,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     private final boolean advancedEffects;
     private final boolean showHomeSettings;
     private final boolean showShows;
+    /** How many of the most recently used apps go right after the dock (config.xml, recent_apps). */
+    private final int recentCount;
     /** Calmer motion for weak GPUs (config.xml, reduced_motion): no overshoot, shorter fades. */
     private final boolean reducedMotion;
     private final List<Entry> items = new ArrayList<>();
@@ -133,6 +135,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
         this.showHomeSettings = cfg.showHomeSettingsShortcut;
         this.showShows = cfg.showShows;
+        this.recentCount = cfg.recentApps;
         this.reducedMotion = cfg.reducedMotion;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
         // its view being rebound to whatever app now sits in that slot.
@@ -172,6 +175,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             fresh.add(new Entry(Entry.SHOWS, ctx.getString(R.string.shows),
                     new ComponentName(ctx, ShowsActivity.class), null, ctx.getDrawable(R.drawable.ic_shows), null, 0));
         }
+        // The most recently used apps that are not in the dock follow the cards, newest first.
+        final Map<String, Long> recent = recentCount > 0 ? recentRank(fresh) : Collections.<String, Long>emptyMap();
         Collections.sort(fresh, (a, b) -> {
             int fa = favourites.indexOf(a.pkg), fb = favourites.indexOf(b.pkg);
             if (fa >= 0 || fb >= 0) {
@@ -182,6 +187,12 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             // Cards come right after the configured dock apps, before the alphabetical grid.
             boolean ca = a.kind == Entry.CARD || a.kind == Entry.SHOWS, cb = b.kind == Entry.CARD || b.kind == Entry.SHOWS;
             if (ca != cb) return ca ? -1 : 1;
+            Long ra = recent.get(a.pkg), rb = recent.get(b.pkg);
+            if (ra != null || rb != null) {
+                if (ra == null) return 1;
+                if (rb == null) return -1;
+                return Long.compare(rb, ra);
+            }
             return a.label.compareToIgnoreCase(b.label);
         });
         // Retain the optional Default-home tile until dependent tile-ordering work is merged.
@@ -194,6 +205,21 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         items.clear();
         items.addAll(fresh);
         notifyDataSetChanged();
+    }
+
+    /** The last-used time of the {@code recentCount} most recently used plain apps that are not in the dock. */
+    private Map<String, Long> recentRank(List<Entry> entries) {
+        Set<String> eligible = new HashSet<>();
+        for (Entry e : entries) {
+            if (e.kind == Entry.APP && !favourites.contains(e.pkg)) eligible.add(e.pkg);
+        }
+        Map<String, Long> used = AppUsage.lastUsed(ctx, 7L * 24 * 60 * 60 * 1000);
+        used.keySet().retainAll(eligible);
+        List<Map.Entry<String, Long>> sorted = new ArrayList<>(used.entrySet());
+        Collections.sort(sorted, (a, b) -> Long.compare(b.getValue(), a.getValue()));
+        Map<String, Long> top = new HashMap<>();
+        for (int i = 0; i < sorted.size() && i < recentCount; i++) top.put(sorted.get(i).getKey(), sorted.get(i).getValue());
+        return top;
     }
 
     private Drawable loadBanner(PackageManager pm, ResolveInfo ri) {
