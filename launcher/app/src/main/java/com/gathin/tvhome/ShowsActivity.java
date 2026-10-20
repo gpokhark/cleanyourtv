@@ -165,7 +165,8 @@ public class ShowsActivity extends Activity {
         }
         adapter.notifyDataSetChanged();
         final int at = focus;
-        list.scrollToPosition(at);
+        // With a "Last on YouTube" row above the shows, the cursor sits on the first show but the row stays in view.
+        list.scrollToPosition(mode == Mode.SHOWS && at == 1 ? 0 : at);
         list.post(() -> {
             RecyclerView.LayoutManager lm = list.getLayoutManager();
             View v = lm == null ? null : lm.findViewByPosition(at);
