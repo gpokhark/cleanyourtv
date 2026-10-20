@@ -2,9 +2,14 @@ package com.gathin.tvhome;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -109,6 +114,54 @@ public class InputKeyService extends AccessibilityService {
             startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
         } catch (RuntimeException e) {
             Log.w(TAG, "could not open " + t.pkg + ": " + e);
+        }
+    }
+
+
+    // ---- off while an on-screen keyboard is in use ----
+    //
+    // A key service sits in the path of every real remote key press and answers on the launcher's main thread, so on
+    // some TVs the on-screen keyboard in Search stops following the remote while it is on (the same keys sent over
+    // adb are fine). The Search screen therefore switches it off while it is showing, and it comes back on leaving.
+    // The enabled-services setting is changed directly (WRITE_SECURE_SETTINGS); a flag remembers that it was paused.
+
+    private static final String PAUSE_PREFS = "keyservice";
+
+    /** Switches the key service off, if it is on. Pair with {@link #resume}. */
+    static void pause(Context ctx) {
+        try {
+            ContentResolver cr = ctx.getContentResolver();
+            String list = Settings.Secure.getString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if (list == null || !list.contains(InputKeyService.class.getSimpleName())) return;
+            StringBuilder rest = new StringBuilder();
+            for (String one : list.split(":")) {
+                if (one.isEmpty() || one.contains(InputKeyService.class.getSimpleName())) continue;
+                if (rest.length() > 0) rest.append(':');
+                rest.append(one);
+            }
+            ctx.getSharedPreferences(PAUSE_PREFS, Context.MODE_PRIVATE).edit().putBoolean("paused", true).commit();
+            Settings.Secure.putString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, rest.toString());
+        } catch (SecurityException e) {
+            // WRITE_SECURE_SETTINGS not granted: the service stays on.
+        }
+    }
+
+    /** Switches the key service back on if {@link #pause} switched it off. Cheap when it did not. */
+    static void resume(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PAUSE_PREFS, Context.MODE_PRIVATE);
+        if (!prefs.getBoolean("paused", false)) return;
+        try {
+            ContentResolver cr = ctx.getContentResolver();
+            String mine = new ComponentName(ctx, InputKeyService.class).flattenToString();
+            String list = Settings.Secure.getString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+            if (list == null || list.isEmpty() || "null".equals(list)) list = mine;
+            else if (!list.contains(InputKeyService.class.getSimpleName())) list = list + ":" + mine;
+            Settings.Secure.putString(cr, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, list);
+            Settings.Secure.putInt(cr, Settings.Secure.ACCESSIBILITY_ENABLED, 1);
+            prefs.edit().putBoolean("paused", false).commit();
+        } catch (SecurityException e) {
+            // Not granted: nothing was paused either.
+            prefs.edit().putBoolean("paused", false).commit();
         }
     }
 

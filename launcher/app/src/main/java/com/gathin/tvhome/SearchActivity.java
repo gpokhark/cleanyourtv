@@ -156,6 +156,18 @@ public class SearchActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        InputKeyService.pause(this);   // the on-screen keyboard follows the remote only with it off
+    }
+
+    @Override
+    protected void onPause() {
+        InputKeyService.resume(this);
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
         generation++;
         pool.shutdownNow();

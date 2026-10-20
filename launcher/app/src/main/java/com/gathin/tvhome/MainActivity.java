@@ -450,6 +450,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        InputKeyService.resume(this);   // in case Search was closed without giving it back
         promptsPaused = false;
         if (rebuildOnResume) {
             tilesReady = false;

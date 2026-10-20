@@ -47,3 +47,11 @@ Push the config with `tools/theme.sh <folder>`, then restart the service so it r
 
 `dumpsys window policy` shows which app handles each global key. A button sent to a package you disabled needs that
 package enabled (`pm enable <package>`).
+
+## The on-screen keyboard in Search
+
+A key service sits in the path of every real remote key press and answers on the launcher's main thread. On a TCL TV
+this left the on-screen keyboard in Search not following the remote (the highlight did not move), while the same keys
+sent over adb worked, and it was fine once the service was off. So the Search screen switches the service off while it
+is showing, and it comes back when you leave it (to Home or to another app). The app buttons do not work while Search is
+open. This needs WRITE_SECURE_SETTINGS (granted by the install script); without it the service just stays on.
