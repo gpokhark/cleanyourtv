@@ -125,6 +125,21 @@ final class ShowStore {
         }
     }
 
+    /** A YouTube video that was watched: what the app reported, and when. */
+    static final class Video {
+        final String title;
+        final String channel;
+        final long at;
+
+        Video(String title, String channel, long at) {
+            this.title = title;
+            this.channel = channel;
+            this.at = at;
+        }
+    }
+
+    private static final int MAX_VIDEOS = 10;
+
     private final SharedPreferences prefs;
 
     ShowStore(Context ctx) {
@@ -214,5 +229,41 @@ final class ShowStore {
 
     long watchingSince() {
         return prefs.getLong("watching.since", 0);
+    }
+
+    // ---- the last videos watched on YouTube ----
+
+    /** Newest first. */
+    List<Video> youtube() {
+        List<Video> out = new ArrayList<>();
+        try {
+            JSONArray a = new JSONArray(prefs.getString("youtube.history", "[]"));
+            for (int i = 0; i < a.length(); i++) {
+                JSONObject o = a.getJSONObject(i);
+                out.add(new Video(o.getString("title"), o.optString("channel"), o.optLong("at")));
+            }
+        } catch (JSONException e) {
+            Log.w(TAG, "youtube history unreadable, starting again: " + e);
+        }
+        return out;
+    }
+
+    /** Puts a video at the top; watching it again moves it up instead of listing it twice. */
+    void addYoutube(String title, String channel) {
+        List<Video> all = youtube();
+        for (int i = all.size() - 1; i >= 0; i--) {
+            if (all.get(i).title.equals(title) && all.get(i).channel.equals(channel)) all.remove(i);
+        }
+        all.add(0, new Video(title, channel, System.currentTimeMillis()));
+        JSONArray a = new JSONArray();
+        try {
+            for (int i = 0; i < all.size() && i < MAX_VIDEOS; i++) {
+                a.put(new JSONObject().put("title", all.get(i).title).put("channel", all.get(i).channel).put("at", all.get(i).at));
+            }
+        } catch (JSONException e) {
+            Log.w(TAG, "could not save the youtube history: " + e);
+            return;
+        }
+        prefs.edit().putString("youtube.history", a.toString()).apply();
     }
 }

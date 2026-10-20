@@ -1,6 +1,7 @@
 package com.gathin.tvhome;
 
 import android.content.ComponentName;
+import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.MediaSessionManager;
@@ -31,6 +32,7 @@ public class MediaWatcher extends NotificationListenerService {
     private static final long AUTOPLAY_MIN_WATCH_MS = 8 * 60 * 1000;    // an episode has to have run this long
     private static final long AUTOPLAY_RESET_MS = 120 * 1000;           // back to the start by more than this
     private static final long GONE_MS = 3 * 60 * 1000;
+    private static final long YOUTUBE_SAVE_MS = 30_000;   // a video counts as watched after this long
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Map<MediaSession.Token, MediaController> watched = new HashMap<>();
@@ -38,6 +40,12 @@ public class MediaWatcher extends NotificationListenerService {
     private ShowStore store;
     private ShowStore.Show show;       // the catalogue of the show being watched, loaded when watching starts
     private long showLoadedFor;        // watchingSince the catalogue was loaded for
+    private String youtubePkg = "";    // the YouTube app to follow, empty = off (config youtube_package)
+    private String ytTitle = "";       // the video being watched, and for how long it has played
+    private String ytChannel = "";
+    private long ytPlayedMs;
+    private long ytLastTick;
+    private boolean ytSaved;
     private long lastSeen;             // wall-clock time a session of the watched app last existed
 
     private final Runnable tick = new Runnable() {
@@ -51,6 +59,7 @@ public class MediaWatcher extends NotificationListenerService {
     @Override
     public void onListenerConnected() {
         store = new ShowStore(this);
+        youtubePkg = Config.load(this).youtubePackage;
         try {
             MediaSessionManager msm = (MediaSessionManager) getSystemService(MEDIA_SESSION_SERVICE);
             ComponentName me = new ComponentName(this, MediaWatcher.class);
@@ -95,6 +104,7 @@ public class MediaWatcher extends NotificationListenerService {
 
     private void checkAll() {
         if (store == null) return;
+        trackYoutube();
         String showId = store.watchingShow();
         if (showId == null) return;
         loadShow(showId);
@@ -114,6 +124,46 @@ public class MediaWatcher extends NotificationListenerService {
             // episode was opened (it can take a minute to start): what plays next is not this show.
             store.stopWatching();
         }
+    }
+
+    /**
+     * Saves a YouTube video once it has played for YOUTUBE_SAVE_MS: its title and channel, which is all the app
+     * shows other apps. Switching video starts the count again.
+     */
+    private void trackYoutube() {
+        if (youtubePkg.isEmpty()) return;
+        long now = System.currentTimeMillis();
+        long since = Math.min(now - ytLastTick, 2 * TICK_MS);   // a long gap (the TV slept) is not watching
+        ytLastTick = now;
+        for (MediaController c : watched.values()) {
+            if (!c.getPackageName().equals(youtubePkg)) continue;
+            PlaybackState s = c.getPlaybackState();
+            MediaMetadata md = c.getMetadata();
+            if (s == null || md == null) continue;
+            String title = text(md, MediaMetadata.METADATA_KEY_TITLE, MediaMetadata.METADATA_KEY_DISPLAY_TITLE);
+            String channel = text(md, MediaMetadata.METADATA_KEY_ARTIST, MediaMetadata.METADATA_KEY_DISPLAY_SUBTITLE);
+            if (title.isEmpty()) continue;
+            if (!title.equals(ytTitle) || !channel.equals(ytChannel)) {
+                ytTitle = title;
+                ytChannel = channel;
+                ytPlayedMs = 0;
+                ytSaved = false;
+                Log.i(TAG, "youtube: " + title + " | " + channel + " | duration " + md.getLong(MediaMetadata.METADATA_KEY_DURATION));
+            }
+            if (s.getState() == PlaybackState.STATE_PLAYING && !ytSaved) {
+                ytPlayedMs += since;
+                if (ytPlayedMs >= YOUTUBE_SAVE_MS) {
+                    store.addYoutube(title, channel);
+                    ytSaved = true;
+                }
+            }
+        }
+    }
+
+    private static String text(MediaMetadata md, String first, String second) {
+        String v = md.getString(first);
+        if (v == null || v.trim().isEmpty()) v = md.getString(second);
+        return v == null ? "" : v.trim();
     }
 
     private void loadShow(String showId) {

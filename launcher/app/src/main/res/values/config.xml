@@ -44,6 +44,10 @@
     <!-- Shows tile in the grid: keeps your place (season, episode and how far in) in the shows you are working
          through, and opens the next one. Needs a catalogue per show and a one-time permission. Off by default.
          See docs/SHOWS.md -->
+    <!-- The YouTube app to follow for "Last on YouTube" on the Shows screen: its package name, empty = off. It saves the
+         title and channel of videos watched for about 30 seconds, and needs the Shows notification listener
+         (docs/SHOWS.md). Android TV: com.google.android.youtube.tv. Fire TV: com.amazon.firetv.youtube. -->
+    <string name="youtube_package"></string>
     <bool name="show_shows">false</bool>
 
     <!-- Live pill: your favourite free live channels. Each entry is "Name|android.package|link". The link opens that

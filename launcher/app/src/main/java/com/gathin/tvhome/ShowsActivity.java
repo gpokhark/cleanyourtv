@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,7 +47,7 @@ public class ShowsActivity extends Activity {
         }
     }
 
-    private enum Mode { SHOWS, DETAIL, SEASONS, EPISODES }
+    private enum Mode { SHOWS, DETAIL, SEASONS, EPISODES, YOUTUBE }
 
     private final List<Row> rows = new ArrayList<>();
     private List<ShowStore.Show> shows = new ArrayList<>();
@@ -54,6 +55,7 @@ public class ShowsActivity extends Activity {
     private Mode mode = Mode.SHOWS;
     private ShowStore.Show show;
     private ShowStore.Season season;
+    private String youtubePkg = "";   // empty = no "Last on YouTube" entry
     private boolean soleShow;   // with a single show the list level is skipped
     private TextView title, sub, kicker;
     private RecyclerView list;
@@ -77,7 +79,8 @@ public class ShowsActivity extends Activity {
     protected void onResume() {
         super.onResume();
         shows = ShowStore.load(this);
-        soleShow = shows.size() == 1;
+        youtubePkg = Config.load(this).youtubePackage;
+        soleShow = shows.size() == 1 && youtubePkg.isEmpty();
         // Come back to the same show after watching: pick it up again from the reloaded catalogue.
         if (show != null) {
             ShowStore.Show again = null;
@@ -96,6 +99,10 @@ public class ShowsActivity extends Activity {
     @Override
     public void onBackPressed() {
         switch (mode) {
+            case YOUTUBE:
+                mode = Mode.SHOWS;
+                render();
+                return;
             case EPISODES:
                 mode = Mode.SEASONS;
                 render();
@@ -123,14 +130,25 @@ public class ShowsActivity extends Activity {
     private void render() {
         rows.clear();
         int focus = 0;
-        if (shows.isEmpty()) {
+        if (shows.isEmpty() && youtubePkg.isEmpty()) {
             kicker.setText(R.string.shows);
             title.setText(R.string.shows_none);
             sub.setText("");
+        } else if (mode == Mode.YOUTUBE) {
+            renderYoutube();
         } else if (mode == Mode.SHOWS || show == null) {
             kicker.setText(R.string.shows);
             title.setText(R.string.shows);
             sub.setText("");
+            if (!youtubePkg.isEmpty()) {
+                List<ShowStore.Video> seen = store.youtube();
+                rows.add(new Row(getString(R.string.shows_youtube),
+                        seen.isEmpty() ? getString(R.string.shows_youtube_none) : seen.get(0).title, "", () -> {
+                            mode = Mode.YOUTUBE;
+                            render();
+                        }));
+                if (!shows.isEmpty()) focus = 1;   // the shows come first when the cursor lands
+            }
             for (ShowStore.Show s : shows) {
                 rows.add(new Row(s.title, progressLine(s), "", () -> {
                     show = s;
@@ -154,6 +172,29 @@ public class ShowsActivity extends Activity {
             if (v == null && lm != null && lm.getChildCount() > 0) v = lm.getChildAt(0);
             if (v != null) v.requestFocus();
         });
+    }
+
+    private void renderYoutube() {
+        kicker.setText(R.string.shows);
+        title.setText(R.string.shows_youtube);
+        List<ShowStore.Video> seen = store.youtube();
+        sub.setText(getString(seen.isEmpty() ? R.string.shows_youtube_empty : R.string.shows_youtube_hint));
+        for (ShowStore.Video v : seen) {
+            rows.add(new Row(v.title, v.channel,
+                    DateUtils.getRelativeTimeSpanString(v.at, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS).toString(),
+                    () -> openYoutube(v)));
+        }
+    }
+
+    /** YouTube's own search for the video: the app picks up where you stopped, as it does for any video you reopen. */
+    private void openYoutube(ShowStore.Video v) {
+        String q = Uri.encode((v.title + " " + v.channel).trim());
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=" + q))
+                    .setPackage(youtubePkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (ActivityNotFoundException e) {
+            Toast.makeText(this, getString(R.string.live_not_installed, youtubePkg), Toast.LENGTH_LONG).show();
+        }
     }
 
     private int renderDetail() {

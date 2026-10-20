@@ -50,6 +50,7 @@ final class Config {
     final String searchKeyboard;
     final List<String> searchExtras;
     final List<String> keyApps;
+    final String youtubePackage;
     final boolean autoTrim;
     final int autoTrimBelowMb;
     final int recentApps;
@@ -80,7 +81,7 @@ final class Config {
     final boolean overlayApplied;
 
     private Config(List<String> dockApps, List<String> hiddenApps, List<String> hiddenInputs, List<String> extraClocks, boolean showSearch, boolean showMemory, boolean showLive, boolean showShows, List<String> liveChannels, List<String> memoryProtect, String searchProvider,
-                   String searchRegion, String searchKeyboard, List<String> searchExtras, List<String> keyApps, boolean autoTrim, int autoTrimBelowMb, int recentApps, int searchMaxResults, List<String> myServices, String liveTvPackage, String liveTvAction,
+                   String searchRegion, String searchKeyboard, List<String> searchExtras, List<String> keyApps, String youtubePackage, boolean autoTrim, int autoTrimBelowMb, int recentApps, int searchMaxResults, List<String> myServices, String liveTvPackage, String liveTvAction,
                    String sourcePanelService, String sourcePanelAction, String inputAction,
                    int columns, int rowsBelowDock, boolean animations, boolean advancedEffects,
                    boolean shamsiDate, boolean moduleCards, boolean reducedMotion, String vpnApp,
@@ -101,6 +102,7 @@ final class Config {
         this.searchKeyboard = searchKeyboard;
         this.searchExtras = Collections.unmodifiableList(searchExtras);
         this.keyApps = Collections.unmodifiableList(keyApps);
+        this.youtubePackage = youtubePackage;
         this.autoTrim = autoTrim;
         this.autoTrimBelowMb = autoTrimBelowMb;
         this.recentApps = recentApps;
@@ -148,6 +150,7 @@ final class Config {
         String searchKeyboard = res.getString(R.string.search_keyboard).trim();
         List<String> searchExtras = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.search_extras)));
         List<String> keyApps = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.key_apps)));
+        String youtubePackage = res.getString(R.string.youtube_package).trim();
         boolean autoTrim = res.getBoolean(R.bool.auto_trim);
         int autoTrimBelowMb = res.getInteger(R.integer.auto_trim_below_mb);
         int recentApps = res.getInteger(R.integer.recent_apps);
@@ -191,6 +194,7 @@ final class Config {
             searchKeyboard = string(json, "search_keyboard", searchKeyboard);
             searchExtras = stringList(json, "search_extras", searchExtras);
             keyApps = stringList(json, "key_apps", keyApps);
+            youtubePackage = string(json, "youtube_package", youtubePackage);
             autoTrim = bool(json, "auto_trim", autoTrim);
             autoTrimBelowMb = integer(json, "auto_trim_below_mb", autoTrimBelowMb, 100, 1500);
             recentApps = integer(json, "recent_apps", recentApps, 0, 12);
@@ -226,7 +230,7 @@ final class Config {
         // A theme can also switch the wallpaper off while the file is still there.
         if (json != null && json.has("wallpaper") && !bool(json, "wallpaper", true)) wallpaper = null;
 
-        return new Config(dock, hidden, hiddenInputs, extraClocks, showSearch, showMemory, showLive, showShows, liveChannels, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchExtras, keyApps, autoTrim, autoTrimBelowMb, recentApps, searchMax, myServices,
+        return new Config(dock, hidden, hiddenInputs, extraClocks, showSearch, showMemory, showLive, showShows, liveChannels, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchExtras, keyApps, youtubePackage, autoTrim, autoTrimBelowMb, recentApps, searchMax, myServices,
                 liveTv, liveTvAction, panelService, panelAction, inputAction,
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, moduleCards, reducedMotion, vpn, homeSettings, background,

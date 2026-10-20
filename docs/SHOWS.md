@@ -43,3 +43,27 @@ any season and episode. It is off by default (`show_shows`).
    Without it the Shows screen still opens episodes, but nothing saves your position.
 
 Your progress stays on the TV, in the launcher's own storage, when you push a newer catalogue.
+
+## Last on YouTube
+
+YouTube has no catalogue or fixed place to keep, so it is handled differently. The app tells other apps only the title
+and channel of the video it is playing (and its length), not a link. Its position looked right for one long video and
+near zero for others, so it is not used. So the Shows screen gets
+one extra entry, "Last on YouTube", listing the last ten videos you watched, newest first.
+
+```json
+"youtube_package": "com.google.android.youtube.tv"
+```
+
+- Empty (the default) turns it off. On Fire TV the package is `com.amazon.firetv.youtube`.
+- A video is saved after it has played for about 30 seconds, so flicking through videos does not fill the list.
+  Watching it again moves it back to the top.
+- OK on a video opens YouTube's own search for its title and channel. Pick the right result; YouTube picks up where you
+  stopped, the way it does for any video you reopen while signed in. If the search shows a different upload first, the
+  match is by name, so it is not exact.
+- It needs the same notification listener as the shows above (see "Tracking where you stop"). Live streams are listed
+  like any other video.
+- `adb logcat -s TvHome.Watcher:I` prints each video it sees, with its title, channel and length. The TV's log buffer
+  turns over fast, so read it soon after the video starts.
+- An ad that plays first counts toward the 30 seconds, but the app keeps reporting the video's own title, so an ad is
+  never saved as a video.
