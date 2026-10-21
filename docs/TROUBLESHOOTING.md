@@ -161,4 +161,5 @@ then refuses to bind the launcher's services. Symptoms: the remote's app buttons
 appops set com.gathin.tvhome APP_AUTO_START allow
 ```
 
-then run the build script again (it re-applies the accessibility service) and turn the notification listener off and on.
+The build script now applies this itself after every install (trying `AUTO_START` if `APP_AUTO_START` does not exist). If you
+installed some other way, run the command above, then run the build script again (it re-applies the accessibility service) and turn the notification listener off and on.

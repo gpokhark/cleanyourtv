@@ -82,9 +82,12 @@ if ! printf '%s' "$START_OUT" | grep -qF 'Status: ok' || printf '%s' "$START_OUT
   echo "ERROR: the new launcher did not start (see above); $STOCK_LAUNCHER was left enabled." >&2
   exit 1
 fi
+# The appops line lets the launcher's services start in the background on TVs (some TCL builds) whose
+# app-start manager blocks them; the op name differs by firmware and a missing one is harmless.
 printf '%s\n' \
   "pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION 2>/dev/null; echo location-granted" \
   "cmd package compile -m speed -f com.gathin.tvhome" \
+  "appops set com.gathin.tvhome APP_AUTO_START allow 2>/dev/null || appops set com.gathin.tvhome AUTO_START allow 2>/dev/null; true" \
   "$DISABLE_STOCK" \
   "cmd package set-home-activity --user 0 com.gathin.tvhome/.MainActivity" \
   | "$PY" -I ../tools/tv.py --batch
