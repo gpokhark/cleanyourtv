@@ -2,6 +2,6 @@
 <!-- Secondary lines of a focused list row (package, signing key): dark enough to read on the white
      focused background at 10sp; unfocused the same as pill_text_dim. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_focused="true" android:color="#E6111111" />
-    <item android:color="#73FFFFFF" />
+    <item android:state_focused="true" android:color="@color/text_on_light_mid" />
+    <item android:color="@color/text_dim" />
 </selector>

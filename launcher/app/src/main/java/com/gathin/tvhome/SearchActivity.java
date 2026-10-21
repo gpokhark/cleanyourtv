@@ -33,7 +33,6 @@ import java.util.concurrent.Executors;
  * The data source is a {@link TitleSearch.Provider}; which services count comes from `my_services`.
  */
 public class SearchActivity extends Activity {
-    private static final int GREEN = 0xFF1FA84F;   // readable on both the black row and the white focused row
 
     private static final class Row {
         final TitleSearch.Title title;
@@ -333,13 +332,13 @@ public class SearchActivity extends Activity {
             h.meta.setText(r.title.year > 0 ? r.title.kind + " · " + r.title.year : r.title.kind);
             if (!r.done) {
                 h.where.setText(R.string.search_checking_row);
-                h.where.setTextColor(0x99FFFFFF);
+                h.where.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
             } else if (r.failed) {
                 h.where.setText(R.string.search_row_failed);
-                h.where.setTextColor(0x99FFFFFF);
+                h.where.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
             } else if (r.hits.isEmpty()) {
                 h.where.setText(R.string.search_pay);
-                h.where.setTextColor(0x99FFFFFF);
+                h.where.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
             } else {
                 StringBuilder sb = new StringBuilder();
                 for (MyServices.Hit hit : r.hits) {
@@ -348,7 +347,7 @@ public class SearchActivity extends Activity {
                     if (hit.free) sb.append(" (").append(getString(R.string.search_free_suffix)).append(')');
                 }
                 h.where.setText(sb);
-                h.where.setTextColor(GREEN);
+                h.where.setTextColor(getResources().getColor(R.color.text_success, getTheme()));
             }
             h.itemView.setOnClickListener(v -> onPick(r));
         }

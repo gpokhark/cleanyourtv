@@ -948,7 +948,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 TextView dot = new TextView(this);
                 dot.setText("  \u00B7  ");
                 dot.setTextSize(13);
-                dot.setTextColor(0x66FFFFFF);
+                dot.setTextColor(getResources().getColor(R.color.text_faint, getTheme()));
                 box.addView(dot);
             }
             box.addView(extraClock(id, label));
@@ -959,7 +959,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextClock extraClock(String zone, String label) {
         TextClock t = new TextClock(this);
         t.setTextSize(13);
-        t.setTextColor(0x99FFFFFF);
+        t.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
         t.setTypeface(getResources().getFont(R.font.outfit));
         t.setSingleLine(true);
         t.setIncludeFontPadding(false);

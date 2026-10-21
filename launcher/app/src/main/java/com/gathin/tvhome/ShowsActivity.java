@@ -370,7 +370,7 @@ public class ShowsActivity extends Activity {
             h.meta.setText(r.meta);
             h.meta.setVisibility(r.meta.isEmpty() ? View.GONE : View.VISIBLE);
             h.where.setText(r.right);
-            h.where.setTextColor(0xFF1FA84F);
+            h.where.setTextColor(getResources().getColor(R.color.text_success, getTheme()));
             h.itemView.setOnClickListener(v -> r.action.run());
             h.itemView.setOnLongClickListener(r.longAction == null ? null : v -> {
                 r.longAction.run();
