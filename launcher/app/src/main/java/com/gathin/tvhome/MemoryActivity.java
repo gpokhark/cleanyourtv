@@ -114,18 +114,21 @@ public class MemoryActivity extends Activity {
     private void refreshHeader() {
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         ((ActivityManager) getSystemService(ACTIVITY_SERVICE)).getMemoryInfo(mi);
-        long swapTotal = 0, swapFree = 0;
+        long swapTotal = 0, swapFree = 0, available = mi.availMem / 1024;
         try (BufferedReader r = new BufferedReader(new java.io.FileReader("/proc/meminfo"))) {
             String line;
             while ((line = r.readLine()) != null) {
                 if (line.startsWith("SwapTotal:")) swapTotal = kb(line);
                 else if (line.startsWith("SwapFree:")) swapFree = kb(line);
+                else if (line.startsWith("MemAvailable:")) available = kb(line);
             }
         } catch (IOException ignored) {
             // No swap figure: shown as 0%.
         }
-        int swapUsed = swapTotal > 0 ? (int) (100 - swapFree * 100 / swapTotal) : 0;
-        header.setText(getString(R.string.memory_header, mb(mi.availMem / 1024), mb(mi.totalMem / 1024), swapUsed));
+        // Rounded, not truncated: the free share rounded down made the used share read up to a point high.
+        int swapUsed = swapTotal > 0 ? Math.round((swapTotal - swapFree) * 100f / swapTotal) : 0;
+        // MemAvailable is the kernel's figure, the one adb tools and free-memory.sh print; availMem counts more as reclaimable.
+        header.setText(getString(R.string.memory_header, mb(available), mb(mi.totalMem / 1024), swapUsed));
     }
 
     private static long kb(String meminfoLine) {
