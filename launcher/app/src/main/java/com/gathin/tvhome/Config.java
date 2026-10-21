@@ -82,6 +82,8 @@ final class Config {
     final File wallpaper;
     /** Whether the overlay file was present and parsed. */
     final boolean overlayApplied;
+    /** Three crashes in five minutes: the overlay and the optional features are off (docs/WATCHDOG.md). */
+    final boolean safeMode;
 
     private Config(List<String> dockApps, List<String> hiddenApps, List<String> hiddenInputs, List<String> extraClocks, boolean showSearch, boolean showMemory, boolean showLive, boolean showShows, List<String> liveChannels, List<String> memoryProtect, String searchProvider,
                    String searchRegion, String searchKeyboard, List<String> searchExtras, List<String> keyApps, String youtubePackage, boolean autoTrim, int autoTrimBelowMb, int recentApps, int searchMaxResults, List<String> myServices, String liveTvPackage, String liveTvAction,
@@ -89,7 +91,7 @@ final class Config {
                    int columns, int rowsBelowDock, boolean animations, boolean advancedEffects,
                    boolean shamsiDate, boolean moduleCards, boolean reducedMotion, String vpnApp,
                    boolean showHomeSettingsShortcut, int backgroundColor, int skyIntensity, double skyLatitude, double skyLongitude,
-                   File wallpaper, boolean overlayApplied) {
+                   File wallpaper, boolean overlayApplied, boolean safeMode) {
         this.dockApps = Collections.unmodifiableList(dockApps);
         this.hiddenApps = Collections.unmodifiableList(hiddenApps);
         this.hiddenInputs = Collections.unmodifiableList(hiddenInputs);
@@ -131,6 +133,7 @@ final class Config {
         this.skyLongitude = skyLongitude;
         this.wallpaper = wallpaper;
         this.overlayApplied = overlayApplied;
+        this.safeMode = safeMode;
     }
 
     /** The folder the theme tools push into; null when external storage is unavailable. */
@@ -183,7 +186,12 @@ final class Config {
 
         File dir = dir(ctx);
         File file = dir != null ? new File(dir, FILE_NAME) : null;
-        JSONObject json = read(file);
+        // A theme push or reset invalidates choices made on the TV, and forgets recorded crashes.
+        // On first use, remember the current theme without clearing choices from an older launcher version.
+        SharedPreferences choices = ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
+        syncThemeChoices(ctx, choices, dir, file);
+        boolean safe = WatchdogApp.safeMode(ctx);
+        JSONObject json = safe ? null : read(file);
         if (json != null) {
             applied = true;
             dock = stringList(json, "dock_apps", dock);
@@ -226,27 +234,29 @@ final class Config {
             skyLatitude = decimal(json, "sky_latitude", skyLatitude, -90, 90);
             skyLongitude = decimal(json, "sky_longitude", skyLongitude, -180, 180);
         }
-        // A theme push or reset invalidates choices made on the TV. On first use, remember the
-        // current theme without clearing choices from an older launcher version.
-        SharedPreferences choices = ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
-        syncThemeChoices(choices, dir, file);
+        if (safe) {
+            showSearch = showMemory = showLive = showShows = false;
+            skyIntensity = 0;
+            advancedEffects = false;
+        }
         int chosenColumns = choices.getInt("columns", columns);
         if (chosenColumns >= 4 && chosenColumns <= 7) columns = chosenColumns;
         animations = choices.getBoolean("animations", animations);
-        advancedEffects = choices.getBoolean("advanced_effects", advancedEffects);
+        if (!safe) advancedEffects = choices.getBoolean("advanced_effects", advancedEffects);
         File wallpaper = dir != null ? new File(dir, WALLPAPER_NAME) : null;
         if (wallpaper != null && !(wallpaper.isFile() && wallpaper.length() > 0)) wallpaper = null;
         // A theme can also switch the wallpaper off while the file is still there.
         if (json != null && json.has("wallpaper") && !bool(json, "wallpaper", true)) wallpaper = null;
+        if (safe) wallpaper = null;
 
         return new Config(dock, hidden, hiddenInputs, extraClocks, showSearch, showMemory, showLive, showShows, liveChannels, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchExtras, keyApps, youtubePackage, autoTrim, autoTrimBelowMb, recentApps, searchMax, myServices,
                 liveTv, liveTvAction, panelService, panelAction, inputAction,
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, moduleCards, reducedMotion, vpn, homeSettings, background,
-                Math.max(0, Math.min(100, skyIntensity)), skyLatitude, skyLongitude, wallpaper, applied);
+                Math.max(0, Math.min(100, skyIntensity)), skyLatitude, skyLongitude, wallpaper, applied, safe);
     }
 
-    private static void syncThemeChoices(SharedPreferences choices, File dir, File config) {
+    private static void syncThemeChoices(Context ctx, SharedPreferences choices, File dir, File config) {
         File revision = dir == null ? null : new File(dir, THEME_REVISION_NAME);
         String token = revisionToken(revision);
         String signature = fileStamp(config) + ":" + token;
@@ -258,9 +268,11 @@ final class Config {
             if (!"absent".equals(token)) editor.remove("columns").remove("animations")
                     .remove("advanced_effects");
             editor.putString(THEME_SIGNATURE_KEY, signature).commit();
+            if (!"absent".equals(token)) WatchdogApp.clear(ctx);
         } else if (!seen.equals(signature)) {
             choices.edit().remove("columns").remove("animations").remove("advanced_effects")
                     .putString(THEME_SIGNATURE_KEY, signature).commit();
+            WatchdogApp.clear(ctx);
         }
     }
 
