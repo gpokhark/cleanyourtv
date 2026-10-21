@@ -94,6 +94,65 @@ final class Sky {
                 lerp(a.sunX, b.sunX, t));
     }
 
+    /** Sunrise and sunset the anchors were picked around (07:30 and 19:45), in minutes of the day. */
+    static final int REF_SUNRISE = 450;
+    static final int REF_SUNSET = 1185;
+
+    /**
+     * The palette at {@code minuteOfDay} for a day whose sun rises and sets at the given minutes
+     * (see {@link #sunTimes}). Time is stretched piecewise-linearly so that sunrise and sunset
+     * land on the reference anchors: the night, the day and the evening each keep their shape.
+     * Without usable times ({@code sunrise < 0}, or an implausible pair) this is {@link #at(int)}.
+     */
+    static Palette at(int minuteOfDay, int sunrise, int sunset) {
+        if (sunrise < 120 || sunrise > 720 || sunset < 900 || sunset > 1380) return at(minuteOfDay);
+        int m = Math.max(0, Math.min(1440, minuteOfDay));
+        float ref;
+        if (m <= sunrise) {
+            ref = m * (float) REF_SUNRISE / sunrise;
+        } else if (m <= sunset) {
+            ref = REF_SUNRISE + (m - sunrise) * (float) (REF_SUNSET - REF_SUNRISE) / (sunset - sunrise);
+        } else {
+            ref = REF_SUNSET + (m - sunset) * (float) (1440 - REF_SUNSET) / (1440 - sunset);
+        }
+        return at(Math.round(ref));
+    }
+
+    /**
+     * Local sunrise and sunset as {@code {sunriseMinute, sunsetMinute}} (NOAA general solar
+     * position formulae, zenith 90.833 degrees), or {@code null} when the sun does not rise and
+     * set that day (polar day or night) or the inputs are out of range.
+     *
+     * @param latitude  degrees north, -90 to 90
+     * @param longitude degrees east, -180 to 180
+     * @param dayOfYear 1 to 366
+     * @param utcOffsetMinutes the local offset from UTC including daylight saving
+     */
+    static int[] sunTimes(double latitude, double longitude, int dayOfYear, int utcOffsetMinutes) {
+        if (Double.isNaN(latitude) || Double.isNaN(longitude)
+                || Math.abs(latitude) > 90 || Math.abs(longitude) > 180
+                || dayOfYear < 1 || dayOfYear > 366) {
+            return null;
+        }
+        double g = 2 * Math.PI / 365.0 * (dayOfYear - 1 + 0.5);
+        double eqTime = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g)
+                - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+        double decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g)
+                - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g)
+                - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+        double lat = Math.toRadians(latitude);
+        double cosHa = Math.cos(Math.toRadians(90.833)) / (Math.cos(lat) * Math.cos(decl))
+                - Math.tan(lat) * Math.tan(decl);
+        if (Double.isNaN(cosHa) || cosHa < -1 || cosHa > 1) return null;
+        double ha = Math.toDegrees(Math.acos(cosHa));
+        double rise = 720 - 4 * (longitude + ha) - eqTime + utcOffsetMinutes;
+        double set = 720 - 4 * (longitude - ha) - eqTime + utcOffsetMinutes;
+        int r = (int) Math.round(((rise % 1440) + 1440) % 1440);
+        int s = (int) Math.round(((set % 1440) + 1440) % 1440);
+        if (r >= s) return null;   // the local day does not contain a plain rise-then-set
+        return new int[]{r, s};
+    }
+
     /** Minute of day, 0 to 1439, of a wall clock time. */
     static int minuteOfDay(int hour, int minute) {
         return Math.max(0, Math.min(23, hour)) * 60 + Math.max(0, Math.min(59, minute));

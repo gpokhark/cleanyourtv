@@ -1,6 +1,10 @@
 package com.gathin.tvhome;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
@@ -40,11 +44,19 @@ public class SkyView extends View {
     /** Opacity of the whole backdrop, 0 to 255, from sky_intensity. */
     private int intensity;
     private int lastMinute = -1;
+    private double latitude = Double.NaN;
+    private double longitude = Double.NaN;
     private Bitmap texture;
     private BitmapDrawable drawable;
 
     public SkyView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+    }
+
+    /** The place to compute sunrise and sunset for (sky_latitude, sky_longitude); NaN for either leaves it to the TV's own location. */
+    public void setLocation(double lat, double lon) {
+        latitude = lat;
+        longitude = lon;
     }
 
     /** {@code percent} of sky_intensity: 0 hides the backdrop, 100 covers the wallpaper. */
@@ -73,7 +85,7 @@ public class SkyView extends View {
         if (!force && minute == lastMinute) return;
         lastMinute = minute;
 
-        Sky.Palette sky = Sky.at(minute);
+        Sky.Palette sky = palette(now, minute);
         if (texture == null) texture = Bitmap.createBitmap(TEX_W, TEX_H, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(texture);
         canvas.drawColor(0, android.graphics.PorterDuff.Mode.CLEAR);
@@ -100,5 +112,38 @@ public class SkyView extends View {
             setBackground(drawable);
         }
         invalidate();
+    }
+
+    /**
+     * The palette for {@code minute}, anchored to the real sunrise and sunset for the configured
+     * place, or else when the system already holds a last known fix (one binder call, no listener, no updates requested).
+     * Without the permission or a fix this is the fixed-anchor palette.
+     */
+    private Sky.Palette palette(Calendar now, int minute) {
+        try {
+            if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) {
+                int[] sun = Sky.sunTimes(latitude, longitude, now.get(Calendar.DAY_OF_YEAR), utcOffset(now));
+                if (sun != null) return Sky.at(minute, sun[0], sun[1]);
+                return Sky.at(minute);
+            }
+            if (getContext().checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                LocationManager lm = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+                Location fix = lm == null ? null : lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (fix == null && lm != null) fix = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                if (fix != null) {
+                    int[] sun = Sky.sunTimes(fix.getLatitude(), fix.getLongitude(),
+                            now.get(Calendar.DAY_OF_YEAR), utcOffset(now));
+                    if (sun != null) return Sky.at(minute, sun[0], sun[1]);
+                }
+            }
+        } catch (RuntimeException ignored) {
+            // No location service on this TV: fall through to the fixed anchors.
+        }
+        return Sky.at(minute);
+    }
+
+    private static int utcOffset(Calendar now) {
+        return (now.get(Calendar.ZONE_OFFSET) + now.get(Calendar.DST_OFFSET)) / 60000;
     }
 }

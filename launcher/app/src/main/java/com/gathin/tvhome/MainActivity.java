@@ -219,6 +219,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         root.setBackgroundColor(cfg.backgroundColor);
         if (cfg.wallpaper != null) showWallpaper(cfg.wallpaper);
         sky = findViewById(R.id.sky);
+        sky.setLocation(cfg.skyLatitude, cfg.skyLongitude);
         sky.setIntensity(cfg.skyIntensity);
         glass = findViewById(R.id.glass);
         ambient = findViewById(R.id.ambient);

@@ -27,12 +27,30 @@ It sits behind everything, over the wallpaper when there is one, and the palette
 purpose: the white clock, the greeting, the hero name and the dock band all keep their contrast at
 the default 60.
 
+## Sunrise and sunset
+
+By default the anchors are fixed: sunrise at 07:30 and sunset at 19:45. Many TVs keep location switched
+off and hold no fix, so a theme can name the place instead (one decimal is plenty):
+
+```json
+{ "sky_intensity": 60, "sky_latitude": 51.5, "sky_longitude": -0.1 }
+```
+
+Both keys are needed; a value out of range is ignored. When they are set they are used first and the
+TV's own location is never read. Otherwise, when Home has location
+permission (the install script grants it) and the system already holds a last known fix, `SkyView`
+reads it, computes that day's local sunrise and sunset with the NOAA solar formulae in `Sky.sunTimes`,
+and stretches the day so the sunrise and sunset anchors land on them: the warm horizon follows the
+real sun through the seasons. Nothing is requested from the location service; no listener, no
+updates, just the last fix the system already has. With no permission, no fix, or a day with no
+sunrise or sunset (polar regions), the fixed anchors apply exactly as before.
+
 ## Cost
 
 `Sky` is pure maths — no Android types, no clock of its own; the caller passes the minutes since
 midnight, which is why the palette is unit-tested on the JVM. `SkyView` renders one 480×270 bitmap
 and redraws it once a minute, from the same minute tick that updates the clock. Nothing is animated
-and nothing is requested: the backdrop is the only change, and a TV with 1 GB of RAM has nothing to
+and no location updates are requested: the backdrop is the only change, and a TV with 1 GB of RAM has nothing to
 keep up with.
 
 Turning the key off restores the plain background (or the theme's `wallpaper`/`background_color`)

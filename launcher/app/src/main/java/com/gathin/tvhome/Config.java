@@ -75,6 +75,9 @@ final class Config {
     final int backgroundColor;
     /** Time-of-day backdrop, 0 to 100 (config.xml, sky_intensity); 0 keeps the plain background. */
     final int skyIntensity;
+    /** Where the sky's sunrise and sunset are computed for (sky_latitude, sky_longitude); NaN when not set. */
+    final double skyLatitude;
+    final double skyLongitude;
     /** Full-screen picture behind the launcher, or null for the plain colour. */
     final File wallpaper;
     /** Whether the overlay file was present and parsed. */
@@ -85,7 +88,7 @@ final class Config {
                    String sourcePanelService, String sourcePanelAction, String inputAction,
                    int columns, int rowsBelowDock, boolean animations, boolean advancedEffects,
                    boolean shamsiDate, boolean moduleCards, boolean reducedMotion, String vpnApp,
-                   boolean showHomeSettingsShortcut, int backgroundColor, int skyIntensity,
+                   boolean showHomeSettingsShortcut, int backgroundColor, int skyIntensity, double skyLatitude, double skyLongitude,
                    File wallpaper, boolean overlayApplied) {
         this.dockApps = Collections.unmodifiableList(dockApps);
         this.hiddenApps = Collections.unmodifiableList(hiddenApps);
@@ -124,6 +127,8 @@ final class Config {
         this.showHomeSettingsShortcut = showHomeSettingsShortcut;
         this.backgroundColor = backgroundColor;
         this.skyIntensity = skyIntensity;
+        this.skyLatitude = skyLatitude;
+        this.skyLongitude = skyLongitude;
         this.wallpaper = wallpaper;
         this.overlayApplied = overlayApplied;
     }
@@ -172,6 +177,8 @@ final class Config {
         boolean homeSettings = res.getBoolean(R.bool.show_home_settings_shortcut);
         int background = 0xFF000000;
         int skyIntensity = res.getInteger(R.integer.sky_intensity);
+        double skyLatitude = Double.NaN;
+        double skyLongitude = Double.NaN;
         boolean applied = false;
 
         File dir = dir(ctx);
@@ -216,6 +223,8 @@ final class Config {
             homeSettings = bool(json, "show_home_settings_shortcut", homeSettings);
             background = color(json, "background_color", background);
             skyIntensity = integer(json, "sky_intensity", skyIntensity, 0, 100);
+            skyLatitude = decimal(json, "sky_latitude", skyLatitude, -90, 90);
+            skyLongitude = decimal(json, "sky_longitude", skyLongitude, -180, 180);
         }
         // A theme push or reset invalidates choices made on the TV. On first use, remember the
         // current theme without clearing choices from an older launcher version.
@@ -234,7 +243,7 @@ final class Config {
                 liveTv, liveTvAction, panelService, panelAction, inputAction,
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, moduleCards, reducedMotion, vpn, homeSettings, background,
-                Math.max(0, Math.min(100, skyIntensity)), wallpaper, applied);
+                Math.max(0, Math.min(100, skyIntensity)), skyLatitude, skyLongitude, wallpaper, applied);
     }
 
     private static void syncThemeChoices(SharedPreferences choices, File dir, File config) {
@@ -305,6 +314,13 @@ final class Config {
         if (!(v instanceof Number)) return fallback;
         int i = ((Number) v).intValue();
         return i < min || i > max ? fallback : i;
+    }
+
+    private static double decimal(JSONObject o, String key, double fallback, double min, double max) {
+        Object v = o.opt(key);
+        if (!(v instanceof Number)) return fallback;
+        double d = ((Number) v).doubleValue();
+        return d < min || d > max ? fallback : d;
     }
 
     private static int color(JSONObject o, String key, int fallback) {
