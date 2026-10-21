@@ -101,53 +101,6 @@
                         android:textAllCaps="true" />
                 </LinearLayout>
 
-                <!-- The day and date sit under the clock, where the pills in the top bar do not squeeze them. -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="2dp"
-                    android:orientation="vertical">
-
-                    <!-- Shamsi date ("27 Mehr 1405"), shown when shamsi_date is on. -->
-                    <TextView
-                        android:id="@+id/shamsiDate"
-                        android:gravity="left"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:singleLine="true"
-                        android:ellipsize="end"
-                        android:textColor="?attr/text_emphasis"
-                        android:textSize="17sp"
-                        android:fontFamily="@font/outfit_regular"
-                        android:letterSpacing="0.02"
-                        android:includeFontPadding="false"
-                        android:visibility="gone" />
-
-                    <TextClock
-                        android:id="@+id/date"
-                        android:gravity="left"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:singleLine="true"
-                        android:ellipsize="end"
-                        android:format12Hour="@string/date_format"
-                        android:format24Hour="@string/date_format"
-                        android:textColor="?attr/text_label"
-                        android:textSize="14sp"
-                        android:fontFamily="@font/outfit_regular"
-                        android:letterSpacing="0.14"
-                        android:textAllCaps="true" />
-
-                    <!-- Extra time zones (config: extra_clocks), small. Filled in code. -->
-                    <LinearLayout
-                        android:id="@+id/extraClocks"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="3dp"
-                        android:orientation="horizontal"
-                        android:visibility="gone" />
-                </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
@@ -205,6 +158,54 @@
                     android:nextFocusDown="@+id/grid" />
             </LinearLayout>
         </RelativeLayout>
+
+            <!-- The day and date sit under the clock, below the pills, so the full width is theirs: a long day and month would be cut off beside the pills. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="2dp"
+                android:orientation="vertical">
+
+                <!-- Shamsi date ("27 Mehr 1405"), shown when shamsi_date is on. -->
+                <TextView
+                    android:id="@+id/shamsiDate"
+                    android:gravity="left"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:textColor="?attr/text_emphasis"
+                    android:textSize="17sp"
+                    android:fontFamily="@font/outfit_regular"
+                    android:letterSpacing="0.02"
+                    android:includeFontPadding="false"
+                    android:visibility="gone" />
+
+                <TextClock
+                    android:id="@+id/date"
+                    android:gravity="left"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:format12Hour="@string/date_format"
+                    android:format24Hour="@string/date_format"
+                    android:textColor="?attr/text_label"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/outfit_regular"
+                    android:letterSpacing="0.14"
+                    android:textAllCaps="true" />
+
+                <!-- Extra time zones (config: extra_clocks), small. Filled in code. -->
+                <LinearLayout
+                    android:id="@+id/extraClocks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:orientation="horizontal"
+                    android:visibility="gone" />
+            </LinearLayout>
 
         <!-- The wrapper clips at the grid's edge; the grid itself must not clip so scaled tiles can overflow their cells. -->
         <FrameLayout
