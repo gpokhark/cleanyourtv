@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:singleLine="true"
         android:ellipsize="end"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/text_primary"
         android:textSize="22sp"
         android:fontFamily="@font/outfit_medium"
         android:letterSpacing="-0.01" />
@@ -28,7 +28,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:textColor="@color/text_body"
+        android:textColor="?attr/text_body"
         android:textSize="15sp"
         android:lineSpacingExtra="3sp"
         android:fontFamily="@font/outfit" />
@@ -38,7 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:textColor="@color/text_body"
+        android:textColor="?attr/text_body"
         android:textSize="15sp"
         android:lineSpacingExtra="3sp"
         android:fontFamily="@font/outfit" />
@@ -49,7 +49,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/card_prompt_hint"
-        android:textColor="@color/text_muted"
+        android:textColor="?attr/text_muted"
         android:textSize="13sp"
         android:fontFamily="@font/outfit" />
 
@@ -59,7 +59,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:maxLines="2"
-        android:textColor="@color/text_hint"
+        android:textColor="?attr/text_hint"
         android:textSize="12sp"
         android:letterSpacing="0.03"
         android:fontFamily="@font/outfit" />

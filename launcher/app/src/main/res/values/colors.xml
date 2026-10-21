@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Text colours. Names are semantic so a second palette can override them. -->
+    <!-- Text colours of the dark theme (the default). Layouts do not use these directly: they read the matching
+         attribute (res/values/attrs.xml), which Theme.TvHome points here and ThemeOverlay.TvHome.Abyss can override. The Clock screensaver and the focused rows still use them as they are. -->
     <color name="text_primary">#FFFFFFFF</color>
     <color name="text_strong">#F2FFFFFF</color>
     <color name="text_emphasis">#E6FFFFFF</color>

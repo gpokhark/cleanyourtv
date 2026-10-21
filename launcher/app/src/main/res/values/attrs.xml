@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Semantic colours. Theme.TvHome gives the dark values (the default); ThemeOverlay.TvHome.Abyss (theme_style) overrides some of them.
+     Layouts, colour state lists, drawables and the Java that paints (Appearance.color) read these, not fixed values. -->
+<resources>
+    <attr name="text_primary" format="color" />
+    <attr name="text_strong" format="color" />
+    <attr name="text_emphasis" format="color" />
+    <attr name="text_body" format="color" />
+    <attr name="text_secondary" format="color" />
+    <attr name="text_label" format="color" />
+    <attr name="text_muted" format="color" />
+    <attr name="text_eyebrow" format="color" />
+    <attr name="text_hint" format="color" />
+    <attr name="text_dim" format="color" />
+    <attr name="text_faint" format="color" />
+    <attr name="text_settings_note" format="color" />
+    <attr name="text_success" format="color" />
+    <attr name="text_on_focus" format="color" />
+    <attr name="text_on_focus_mid" format="color" />
+    <attr name="text_on_focus_dim" format="color" />
+    <attr name="window_bg" format="color" />
+    <attr name="settings_bg" format="color" />
+    <attr name="icon_tint" format="color" />
+    <attr name="pill_focus_fill" format="color" />
+    <attr name="pill_fill_top" format="color" />
+    <attr name="pill_fill_bottom" format="color" />
+    <attr name="pill_stroke" format="color" />
+    <attr name="row_focus_top" format="color" />
+    <attr name="row_focus_bottom" format="color" />
+    <attr name="row_focus_stroke" format="color" />
+    <attr name="tile_bg" format="color" />
+    <attr name="panel_top" format="color" />
+    <attr name="panel_bottom" format="color" />
+    <attr name="panel_stroke" format="color" />
+    <attr name="dock_band" format="color" />
+    <attr name="dock_edge" format="color" />
+    <attr name="divider" format="color" />
+    <attr name="divider_strong" format="color" />
+    <attr name="glass_fill_top" format="color" />
+    <attr name="glass_fill_bottom" format="color" />
+    <attr name="glass_specular" format="color" />
+    <attr name="glass_rim" format="color" />
+    <attr name="glass_glow" format="color" />
+    <attr name="choice_bg" format="color" />
+    <attr name="choice_focus_fill" format="color" />
+    <attr name="choice_focus_stroke" format="color" />
+    <attr name="choice_focus_text" format="color" />
+    <attr name="choice_selected_fill" format="color" />
+    <attr name="choice_selected_stroke" format="color" />
+    <!-- Corner radii of the drawn surfaces. -->
+    <attr name="radius_pill" format="dimension" />
+    <attr name="radius_row" format="dimension" />
+    <attr name="radius_choice" format="dimension" />
+    <attr name="radius_panel" format="dimension" />
+    <attr name="radius_tile" format="dimension" />
+    <attr name="radius_dock" format="dimension" />
+</resources>

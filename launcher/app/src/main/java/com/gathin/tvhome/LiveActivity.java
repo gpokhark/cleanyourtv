@@ -48,9 +48,11 @@ public class LiveActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Config cfg = Config.load(this);
+        Appearance.apply(this, cfg);
         setContentView(R.layout.activity_live);
         PackageManager pm = getPackageManager();
-        for (String entry : Config.load(this).liveChannels) {
+        for (String entry : cfg.liveChannels) {
             String[] p = entry.split("\\|", 3);
             if (p.length < 2 || p[0].trim().isEmpty() || p[1].trim().isEmpty()) continue;
             String pkg = p[1].trim();

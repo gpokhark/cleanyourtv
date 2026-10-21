@@ -22,6 +22,7 @@ public class GlassView extends View {
     private final RectF rect = new RectF();
     private final float density;
     private float radius;
+    private final int glowColor, fillTop, fillBottom, specularTop;
 
     public GlassView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -29,7 +30,11 @@ public class GlassView extends View {
         radius = 20f * density;
         rim.setStyle(Paint.Style.STROKE);
         rim.setStrokeWidth(1.5f * density);
-        rim.setColor(0xCCFFFFFF);
+        rim.setColor(Appearance.color(context, R.attr.glass_rim));
+        glowColor = Appearance.color(context, R.attr.glass_glow);
+        fillTop = Appearance.color(context, R.attr.glass_fill_top);
+        fillBottom = Appearance.color(context, R.attr.glass_fill_bottom);
+        specularTop = Appearance.color(context, R.attr.glass_specular);
         glow.setStyle(Paint.Style.STROKE);
         // Cache the slab as a texture. The spring only changes translation, so the GPU can
         // move it without replaying clipPath and the glow on every frame. That path is
@@ -45,8 +50,8 @@ public class GlassView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        fill.setShader(new LinearGradient(0, 0, 0, h, 0x3DFFFFFF, 0x12FFFFFF, Shader.TileMode.CLAMP));
-        specular.setShader(new LinearGradient(0, 0, 0, h * 0.45f, 0x66FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP));
+        fill.setShader(new LinearGradient(0, 0, 0, h, fillTop, fillBottom, Shader.TileMode.CLAMP));
+        specular.setShader(new LinearGradient(0, 0, 0, h * 0.45f, specularTop, specularTop & 0x00FFFFFF, Shader.TileMode.CLAMP));
     }
 
     @Override
@@ -58,7 +63,7 @@ public class GlassView extends View {
         // they cost one draw, not one per frame of the spring.
         for (int i = 1; i <= 3; i++) {
             glow.setStrokeWidth(i * 2f * density);
-            glow.setColor((0x30 / i) << 24 | 0xFFFFFF);
+            glow.setColor(((glowColor >>> 24) / i) << 24 | (glowColor & 0x00FFFFFF));
             float o = i * density;
             canvas.drawRoundRect(rect.left - o, rect.top - o, rect.right + o, rect.bottom + o, radius + o, radius + o, glow);
         }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text of a settings choice: the default style keeps it white when focused; abyss turns it dark on its light fill. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:color="?attr/choice_focus_text" />
+    <item android:color="?attr/text_primary" />
+</selector>

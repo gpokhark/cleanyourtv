@@ -43,7 +43,7 @@
             android:gravity="center"
             android:singleLine="true"
             android:ellipsize="end"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/text_primary"
             android:textSize="13sp"
             android:fontFamily="@font/outfit"
             android:visibility="gone" />
@@ -60,7 +60,7 @@
         android:ellipsize="end"
         android:alpha="0"
         android:translationY="-6dp"
-        android:textColor="@color/text_strong"
+        android:textColor="?attr/text_strong"
         android:textSize="14sp"
         android:fontFamily="@font/outfit_medium"
         android:letterSpacing="0.02" />

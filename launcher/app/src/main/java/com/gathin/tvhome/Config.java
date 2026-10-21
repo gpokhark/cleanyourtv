@@ -78,6 +78,8 @@ final class Config {
     /** Where the sky's sunrise and sunset are computed for (sky_latitude, sky_longitude); NaN when not set. */
     final double skyLatitude;
     final double skyLongitude;
+    /** "default" or "abyss" (config.xml, theme_style), already normalised by {@link ThemeStyle#normalize}; default in safe mode. */
+    final String themeStyle;
     /** Full-screen picture behind the launcher, or null for the plain colour. */
     final File wallpaper;
     /** Whether the overlay file was present and parsed. */
@@ -90,7 +92,7 @@ final class Config {
                    String sourcePanelService, String sourcePanelAction, String inputAction,
                    int columns, int rowsBelowDock, boolean animations, boolean advancedEffects,
                    boolean shamsiDate, boolean moduleCards, boolean reducedMotion, String vpnApp,
-                   boolean showHomeSettingsShortcut, int backgroundColor, int skyIntensity, double skyLatitude, double skyLongitude,
+                   boolean showHomeSettingsShortcut, int backgroundColor, int skyIntensity, double skyLatitude, double skyLongitude, String themeStyle,
                    File wallpaper, boolean overlayApplied, boolean safeMode) {
         this.dockApps = Collections.unmodifiableList(dockApps);
         this.hiddenApps = Collections.unmodifiableList(hiddenApps);
@@ -131,6 +133,7 @@ final class Config {
         this.skyIntensity = skyIntensity;
         this.skyLatitude = skyLatitude;
         this.skyLongitude = skyLongitude;
+        this.themeStyle = themeStyle;
         this.wallpaper = wallpaper;
         this.overlayApplied = overlayApplied;
         this.safeMode = safeMode;
@@ -182,6 +185,7 @@ final class Config {
         int skyIntensity = res.getInteger(R.integer.sky_intensity);
         double skyLatitude = Double.NaN;
         double skyLongitude = Double.NaN;
+        String themeStyle = res.getString(R.string.theme_style);
         boolean applied = false;
 
         File dir = dir(ctx);
@@ -233,12 +237,15 @@ final class Config {
             skyIntensity = integer(json, "sky_intensity", skyIntensity, 0, 100);
             skyLatitude = decimal(json, "sky_latitude", skyLatitude, -90, 90);
             skyLongitude = decimal(json, "sky_longitude", skyLongitude, -180, 180);
+            themeStyle = string(json, "theme_style", themeStyle);
         }
         if (safe) {
             showSearch = showMemory = showLive = showShows = false;
             skyIntensity = 0;
             advancedEffects = false;
+            themeStyle = ThemeStyle.DEFAULT;
         }
+        themeStyle = ThemeStyle.normalize(themeStyle);
         int chosenColumns = choices.getInt("columns", columns);
         if (chosenColumns >= 4 && chosenColumns <= 7) columns = chosenColumns;
         animations = choices.getBoolean("animations", animations);
@@ -253,7 +260,7 @@ final class Config {
                 liveTv, liveTvAction, panelService, panelAction, inputAction,
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, moduleCards, reducedMotion, vpn, homeSettings, background,
-                Math.max(0, Math.min(100, skyIntensity)), skyLatitude, skyLongitude, wallpaper, applied, safe);
+                Math.max(0, Math.min(100, skyIntensity)), skyLatitude, skyLongitude, themeStyle, wallpaper, applied, safe);
     }
 
     private static void syncThemeChoices(Context ctx, SharedPreferences choices, File dir, File config) {

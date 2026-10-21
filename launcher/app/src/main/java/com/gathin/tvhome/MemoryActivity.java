@@ -84,6 +84,8 @@ public class MemoryActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Config cfg = Config.load(this);
+        Appearance.apply(this, cfg);
         setContentView(R.layout.activity_memory);
         header = findViewById(R.id.header);
         status = findViewById(R.id.status);
@@ -93,7 +95,7 @@ public class MemoryActivity extends Activity {
         adapter = new AppAdapter();
         list.setAdapter(adapter);
 
-        protect.addAll(Config.load(this).memoryProtect);
+        protect.addAll(cfg.memoryProtect);
         protect.add(getPackageName());
         closeSelected.setOnClickListener(v -> closeApps(true));
         findViewById(R.id.closeAll).setOnClickListener(v -> closeApps(false));

@@ -65,6 +65,7 @@ public class ShowsActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Appearance.apply(this, Config.load(this));
         setContentView(R.layout.activity_shows);
         title = findViewById(R.id.title);
         sub = findViewById(R.id.sub);
@@ -370,7 +371,7 @@ public class ShowsActivity extends Activity {
             h.meta.setText(r.meta);
             h.meta.setVisibility(r.meta.isEmpty() ? View.GONE : View.VISIBLE);
             h.where.setText(r.right);
-            h.where.setTextColor(getResources().getColor(R.color.text_success, getTheme()));
+            h.where.setTextColor(Appearance.color(ShowsActivity.this, R.attr.text_success));
             h.itemView.setOnClickListener(v -> r.action.run());
             h.itemView.setOnLongClickListener(r.longAction == null ? null : v -> {
                 r.longAction.run();

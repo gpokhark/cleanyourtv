@@ -17,7 +17,7 @@
         android:paddingTop="8dp"
         android:paddingBottom="6dp"
         android:text="@string/module_cards"
-        android:textColor="@color/text_eyebrow"
+        android:textColor="?attr/text_eyebrow"
         android:textSize="11sp"
         android:fontFamily="@font/outfit_medium"
         android:letterSpacing="0.18"

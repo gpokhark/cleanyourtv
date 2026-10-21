@@ -156,6 +156,10 @@
          sets its opacity. Around 60 reads clearly without hiding a wallpaper. Can also be set with
          "sky_intensity": 60 in a theme's config.json. -->
     <integer name="sky_intensity">0</integer>
+    <!-- Look of the launcher: "default" (today's dark look) or "abyss" (near-white accent, frosted translucent surfaces,
+         rounder corners). Anything else means default, and safe mode forces default. Can also be set with
+         "theme_style": "abyss" in a theme's config.json. See docs/THEMES.md -->
+    <string name="theme_style" translatable="false">default</string>
     <!-- Where the sky computes sunrise and sunset, when the TV holds no location of its own. Only a theme's
          config.json sets them ("sky_latitude": 51.5, "sky_longitude": -0.1); one decimal is plenty. Unset, the
          sky uses the TV's last known location, and without one the fixed times. -->

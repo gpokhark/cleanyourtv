@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF000000">
+    android:background="?attr/window_bg">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -17,7 +17,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:text="@string/memory"
-            android:textColor="@color/text_eyebrow"
+            android:textColor="?attr/text_eyebrow"
             android:textSize="12sp"
             android:fontFamily="@font/outfit"
             android:fontVariationSettings="'wght' 500"
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
             android:layout_marginTop="6dp"
-            android:textColor="@color/text_primary"
+            android:textColor="?attr/text_primary"
             android:textSize="30sp"
             android:fontFamily="@font/outfit"
             android:fontVariationSettings="'wght' 300"
@@ -63,7 +63,7 @@
                 android:layout_weight="1"
                 android:layout_marginStart="20dp"
                 android:text="@string/memory_hint"
-                android:textColor="@color/text_label"
+                android:textColor="?attr/text_label"
                 android:textSize="14sp"
                 android:fontFamily="@font/outfit"
                 android:singleLine="true"

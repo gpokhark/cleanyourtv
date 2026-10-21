@@ -4,7 +4,7 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF000000">
+    android:background="?attr/window_bg">
 
     <!-- Time-of-day backdrop, drawn once a minute (config.xml sky_intensity; 0 keeps it hidden).
          Keep in step with layout/activity_main.xml: every view there must exist here too. -->
@@ -30,7 +30,7 @@
         android:layout_gravity="right"
         android:gravity="right"
         android:alpha="0"
-        android:textColor="@color/text_primary"
+        android:textColor="?attr/text_primary"
         android:textSize="48sp"
         android:fontFamily="@font/outfit"
         android:fontVariationSettings="'wght' 300"
@@ -75,7 +75,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:ellipsize="end"
-                        android:textColor="@color/text_emphasis"
+                        android:textColor="?attr/text_emphasis"
                         android:textSize="17sp"
                         android:fontFamily="@font/outfit"
                         android:fontVariationSettings="'wght' 400"
@@ -92,7 +92,7 @@
                         android:ellipsize="end"
                         android:format12Hour="@string/date_format"
                         android:format24Hour="@string/date_format"
-                        android:textColor="@color/text_label"
+                        android:textColor="?attr/text_label"
                         android:textSize="14sp"
                         android:fontFamily="@font/outfit"
                         android:fontVariationSettings="'wght' 400"
@@ -107,7 +107,7 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="8dp"
-                    android:background="#33FFFFFF" />
+                    android:background="?attr/divider_strong" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -120,7 +120,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:ellipsize="end"
-                        android:textColor="@color/text_eyebrow"
+                        android:textColor="?attr/text_eyebrow"
                         android:textSize="12sp"
                         android:fontFamily="@font/outfit"
                         android:fontVariationSettings="'wght' 500"
@@ -138,7 +138,7 @@
                             android:layout_height="wrap_content"
                             android:format12Hour="h:mm"
                             android:format24Hour="HH:mm"
-                            android:textColor="@color/text_primary"
+                            android:textColor="?attr/text_primary"
                             android:textSize="52sp"
                             android:fontFamily="@font/outfit"
                             android:fontVariationSettings="'wght' 300"
@@ -154,7 +154,7 @@
                             android:layout_marginBottom="8dp"
                             android:format12Hour="a"
                             android:format24Hour=""
-                            android:textColor="@color/text_secondary"
+                            android:textColor="?attr/text_secondary"
                             android:textSize="15sp"
                             android:fontFamily="@font/outfit"
                             android:fontVariationSettings="'wght' 500"

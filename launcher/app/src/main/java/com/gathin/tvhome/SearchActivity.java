@@ -70,12 +70,13 @@ public class SearchActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        Config cfg = Config.load(this);
+        Appearance.apply(this, cfg);
         setContentView(R.layout.activity_search);
         query = findViewById(R.id.query);
         filter = findViewById(R.id.filter);
         status = findViewById(R.id.status);
 
-        Config cfg = Config.load(this);
         useSearchKeyboard(cfg.searchKeyboard);
         addExtras(cfg.searchExtras);
         mine = MyServices.parse(cfg.myServices);
@@ -332,13 +333,13 @@ public class SearchActivity extends Activity {
             h.meta.setText(r.title.year > 0 ? r.title.kind + " · " + r.title.year : r.title.kind);
             if (!r.done) {
                 h.where.setText(R.string.search_checking_row);
-                h.where.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
+                h.where.setTextColor(Appearance.color(SearchActivity.this, R.attr.text_muted));
             } else if (r.failed) {
                 h.where.setText(R.string.search_row_failed);
-                h.where.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
+                h.where.setTextColor(Appearance.color(SearchActivity.this, R.attr.text_muted));
             } else if (r.hits.isEmpty()) {
                 h.where.setText(R.string.search_pay);
-                h.where.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
+                h.where.setTextColor(Appearance.color(SearchActivity.this, R.attr.text_muted));
             } else {
                 StringBuilder sb = new StringBuilder();
                 for (MyServices.Hit hit : r.hits) {
@@ -347,7 +348,7 @@ public class SearchActivity extends Activity {
                     if (hit.free) sb.append(" (").append(getString(R.string.search_free_suffix)).append(')');
                 }
                 h.where.setText(sb);
-                h.where.setTextColor(getResources().getColor(R.color.text_success, getTheme()));
+                h.where.setTextColor(Appearance.color(SearchActivity.this, R.attr.text_success));
             }
             h.itemView.setOnClickListener(v -> onPick(r));
         }

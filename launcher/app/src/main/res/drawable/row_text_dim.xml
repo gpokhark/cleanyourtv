@@ -2,5 +2,5 @@
 <!-- Second line of a list row: dim, and brighter on the focused glass so it still reads. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_focused="true" android:color="@color/text_body" />
-    <item android:color="@color/text_dim" />
+    <item android:color="?attr/text_dim" />
 </selector>

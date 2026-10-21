@@ -198,13 +198,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     };
 
+    /** radius_tile of the current theme style, in pixels. */
+    private float tileRadius;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        density = getResources().getDisplayMetrics().density;
         // config.xml, overlaid by config.json from a pushed theme (see Config and tools/theme.sh).
         Config cfg = Config.load(this);
+        Appearance.apply(this, cfg);   // theme_style, before the layout is inflated
+        tileRadius = Appearance.dimension(this, R.attr.radius_tile);
+        setContentView(R.layout.activity_main);
+        density = getResources().getDisplayMetrics().density;
         if (cfg.safeMode) Toast.makeText(this, R.string.safe_mode, Toast.LENGTH_LONG).show();
         COLUMNS = cfg.columns;
         animations = cfg.animations;
@@ -255,7 +260,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         });
         grid.setHasFixedSize(true);
         grid.setItemAnimator(null);
-        grid.addItemDecoration(new DockDecoration(COLUMNS, density));
+        grid.addItemDecoration(new DockDecoration(this, COLUMNS, density));
         if (animations) {
             int enterAnim = reducedMotion ? R.anim.tile_enter_reduced : R.anim.tile_enter;
             float enterDelay = reducedMotion ? 0f : 0.06f;
@@ -597,7 +602,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             lp.width = (int) w;
             lp.height = (int) h;
             glass.setLayoutParams(lp);
-            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * scale + pad);
+            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density, tileRadius) * scale + pad);
         }
         glassTargetX = x;
         glassTargetY = y;
@@ -948,7 +953,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 TextView dot = new TextView(this);
                 dot.setText("  \u00B7  ");
                 dot.setTextSize(13);
-                dot.setTextColor(getResources().getColor(R.color.text_faint, getTheme()));
+                dot.setTextColor(Appearance.color(this, R.attr.text_faint));
                 box.addView(dot);
             }
             box.addView(extraClock(id, label));
@@ -959,7 +964,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private TextClock extraClock(String zone, String label) {
         TextClock t = new TextClock(this);
         t.setTextSize(13);
-        t.setTextColor(getResources().getColor(R.color.text_muted, getTheme()));
+        t.setTextColor(Appearance.color(this, R.attr.text_muted));
         t.setTypeface(getResources().getFont(R.font.outfit));
         t.setSingleLine(true);
         t.setIncludeFontPadding(false);
@@ -1179,7 +1184,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     private void addSeparator(LinearLayout rows) {
         View line = new View(this);
-        line.setBackgroundColor(0x1FFFFFFF);
+        line.setBackgroundColor(Appearance.color(this, R.attr.divider));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) density);
         int m = (int) (6 * density), h = (int) (12 * density);
         lp.setMargins(h, m, h, m);
