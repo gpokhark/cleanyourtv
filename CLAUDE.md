@@ -47,6 +47,11 @@ setting and configured through `Config.java`; the config overlay is JSON pushed 
 - `main` mirrors `upstream/main` (fast-forward only). Work goes on `dev`; push with `--force-with-lease` after rebasing.
 - Commit only when asked. End commit messages with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 
+## Backups
+
+- Never overwrite, edit or delete an existing backup (`backup/` and any per-TV backup folder). A new snapshot goes in a
+  new dated folder; if a file there is locked (read-only or `chflags uchg`), stop and tell the user rather than unlock it.
+
 ## Secrets and privacy
 
 - API keys live in `secrets/` (git-ignored). Never read, print or ask to see them. Only scripts (`tools/push-key.sh`)
