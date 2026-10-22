@@ -19,3 +19,11 @@ traces/
 *.aab
 launcher/hs_err_pid*.log
 launcher/replay_pid*.log
+
+# Per-TV working folders: your TV's address, backups, theme with your coordinates, notes, keys. Never commit these.
+my-tv/
+my-firetv/
+
+# API keys (never commit)
+secrets/
+*.key
