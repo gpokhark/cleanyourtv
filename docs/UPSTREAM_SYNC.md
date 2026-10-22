@@ -32,6 +32,18 @@ summary which upstream changes were accepted and why, and which were declined.
 | Live TV app | `apps/live-tv` with fvp audio, filters, block list (committed copies of the block list and speed notes stay EMPTY) | `docs/LIVETV_APP.md` |
 | Privacy | `tools/check-privacy.py`, the pre-commit hook, `.gitignore` guard for `my-tv/` and `my-firetv/` | `CONTRIBUTING.md` |
 
+## Two implementations that stay ours
+
+- **Crash watchdog and safe mode** (`CrashWatchdog`, `WatchdogApp`). If upstream adds its own crash handling, keep ours
+  and use theirs only if it is a better alternative (it recovers from more cases, or costs less) and does not drop what
+  ours does: crash-loop detection, safe mode, and switching off `memory_adb` and the wallpaper system there.
+- **Close apps through adb** (`memory_adb`: `AdbClient`, `LocalAdb`). The TV's firmware ignores the launcher's own kill
+  request, so this is how Close all works here, and the user confirmed it works. If upstream adds another way to close
+  apps, keep ours until theirs is shown to work on this TV and to be better; do not swap it in on the strength of the
+  code alone.
+
+Confirmed working on the TV on 2026-10-21 after the last sync: the remote buttons (`key_apps`) and Close selected through adb.
+
 ## Taken from upstream on purpose
 
 `tileRefresh` (back to Home without rebuilding tiles unless apps changed; replaced our `rebuildOnResume`), the app-coloured
