@@ -1,0 +1,1 @@
+# How fast each stream delivers video. tools/check-live-channels.py --speed rewrites this file; the committed copy is empty.

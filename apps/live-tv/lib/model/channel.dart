@@ -4,6 +4,9 @@ class Channel {
   final String category;
   final String tvgId;
 
+  /// "slow" when even this channel's best link delivers video at about real-time speed (tools/check-live-channels.py --speed).
+  final String note;
+
   /// First URL is the main stream; the rest are backups tried when it fails.
   final List<String> streamUrls;
 
@@ -13,6 +16,7 @@ class Channel {
     required this.category,
     required this.streamUrls,
     this.tvgId = '',
+    this.note = '',
   });
 
   bool get hasLogo => logoUrl.startsWith('http');
@@ -22,6 +26,7 @@ class Channel {
         'l': logoUrl,
         'c': category,
         'i': tvgId,
+        'w': note,
         's': streamUrls,
       };
 
@@ -30,6 +35,7 @@ class Channel {
         logoUrl: j['l'] as String,
         category: j['c'] as String,
         tvgId: j['i'] as String? ?? '',
+        note: j['w'] as String? ?? '',
         streamUrls: (j['s'] as List).cast<String>(),
       );
 }

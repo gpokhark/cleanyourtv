@@ -91,7 +91,9 @@ is served; a dead channel often still serves a playlist but no video. A definite
 no segments) goes on the block list the app skips. A network error, timeout or 403 is reported as unsure and kept,
 because this computer may simply not reach a server the way the TV does; `--strict` blocks those too. With `--speed` it also measures how fast each live stream delivers video compared with how fast it
 plays and labels it fast, marginal or slow in `assets/stream_notes.txt`: a stream at about 1.0x freezes whenever the
-connection hiccups, however fast your internet is. The committed
+connection hiccups, however fast your internet is. The app reads that file: a channel whose best link is slow gets an amber "slow" tag next to its
+name and a "slow source, may buffer" line in the banner, and a channel with several links tries the fastest first. The
+committed `assets/stream_notes.txt` is empty; run the checker with `--speed` before a build to fill it in. The committed
 block list is empty: run the checker before a build to fill it in, since links go stale within days.
 
 ## Testing on the TV

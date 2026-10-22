@@ -81,6 +81,24 @@ class ChannelsProvider {
     }
   }
 
+  /// Speed of each link, from assets/stream_notes.txt ("URL  # name: slow 0.9x"): link -> [label, ratio].
+  static Future<Map<String, String>> _streamNotes() async {
+    try {
+      final text = await rootBundle.loadString('assets/stream_notes.txt');
+      final out = <String, String>{};
+      for (final line in text.split('\n')) {
+        final t = line.trim();
+        if (t.isEmpty || t.startsWith('#')) continue;
+        final url = t.split(RegExp(r'\s+')).first;
+        final m = RegExp(r':\s*(fast|marginal|slow)\s*([\d.]+)?x?\s*$').firstMatch(t);
+        if (m != null) out[url] = '${m.group(1)} ${m.group(2) ?? ''}'.trim();
+      }
+      return out;
+    } catch (_) {
+      return const {};
+    }
+  }
+
   /// Downloads everything in parallel, parses off the UI thread, saves the cache.
   Future<List<Channel>> refresh() async {
     final sources = [
@@ -113,6 +131,7 @@ class ChannelsProvider {
     };
     args['skip'] = skip.split(',').map((t) => t.trim().toLowerCase()).where((t) => t.isNotEmpty).toList();
     args['blocked'] = await _blockedStreams();
+    args['notes'] = await _streamNotes();
     final json = await compute(_buildChannels, args);
     if (json.isEmpty) throw Exception('No channels found');
 
@@ -274,6 +293,7 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
 
   // merge all playlists; same channel in the same category -> one tile with backup streams
   final byKey = <String, Map<String, dynamic>>{};
+  final notes = (args['notes'] as Map).cast<String, String>();
   for (final p in (args['playlists'] as List).cast<Map>()) {
     final full = p['full'] as bool;
     final sportsList = !full && (p['name'] as String).toLowerCase().contains('sport');
@@ -319,6 +339,19 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
         's': <String>[e.url],
       };
     }
+  }
+
+  // Within a channel the fastest link goes first; a channel whose best link is still slow carries a note.
+  double ratioOf(String url) {
+    final n = notes[url];
+    if (n == null) return 5;   // not measured: assume fine, so a measured slow link sorts after it
+    return double.tryParse(n.split(' ').last) ?? 5;
+  }
+
+  for (final ch in byKey.values) {
+    final urls = ch['s'] as List<String>;
+    urls.sort((a, b) => ratioOf(b).compareTo(ratioOf(a)));
+    ch['w'] = (notes[urls.first] ?? '').startsWith('slow') ? 'slow' : '';
   }
 
   final list = byKey.values.toList();

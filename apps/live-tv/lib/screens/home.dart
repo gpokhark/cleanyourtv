@@ -545,13 +545,23 @@ class _TileState extends State<_Tile> {
           const SizedBox(height: 7),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              widget.channel.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: focused ? _nameFocused : _name,
-            ),
+            child: widget.channel.note.isEmpty
+                ? Text(
+                    widget.channel.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: focused ? _nameFocused : _name,
+                  )
+                // the name gives way, so the "slow" tag is never the part that is cut off
+                : Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Flexible(
+                      child: Text(widget.channel.name,
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: focused ? _nameFocused : _name),
+                    ),
+                    Text('  ·  ${widget.channel.note}',
+                        maxLines: 1, style: const TextStyle(color: Color(0xFFE8A33D), fontSize: 11.5, fontWeight: FontWeight.w600)),
+                  ]),
           ),
         ],
       ),

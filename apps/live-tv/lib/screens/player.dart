@@ -288,7 +288,8 @@ class _PlayerState extends State<Player> {
                 const SizedBox(height: 4),
                 Text(
                   '${channel.category}  ·  ${index + 1} of ${widget.channels.length}  ·  1080p'
-                  '${streamIdx > 0 ? '  ·  backup stream ${streamIdx + 1}' : ''}',
+                  '${streamIdx > 0 ? '  ·  backup stream ${streamIdx + 1}' : ''}'
+                  '${channel.note.isNotEmpty ? '  ·  slow source, may buffer' : ''}',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 13),
                 ),
                 if (audioNote != null)
