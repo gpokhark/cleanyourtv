@@ -64,6 +64,11 @@
     <!-- Close idle apps by itself when Home is pressed and free memory is low (see docs/MEMORY.md). Off by default.
          Needs the same usage-statistics permission as the Memory pill. The app you just left is kept. -->
     <bool name="auto_trim">false</bool>
+    <!-- Close apps through the TV's own adb debugging service instead of asking Android politely. For firmware that
+         ignores the request (the pill then frees nothing). Needs USB debugging on in Developer options, and the TV
+         shows "Allow USB debugging?" once, which you accept with "Always allow". It can only run "am force-stop" on
+         ordinary apps (docs/MEMORY.md, "Closing apps through adb"). Off by default. -->
+    <bool name="memory_adb">false</bool>
     <!-- "Low" for auto_trim: free memory in MB below which it runs. -->
     <integer name="auto_trim_below_mb">500</integer>
 

@@ -11,6 +11,7 @@ import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -71,21 +72,26 @@ final class MemoryTrim {
             }
         }
         if (latest != null) keep.add(latest);
-        int closed = 0;
+        List<String> targets = new ArrayList<>();
         Intent probe = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER);
         for (ResolveInfo ri : ctx.getPackageManager().queryIntentActivities(probe, 0)) {
             String pkg = ri.activityInfo.packageName;
-            if (keep.contains(pkg)) continue;
-            am.killBackgroundProcesses(pkg);
-            closed++;
+            if (!keep.contains(pkg)) targets.add(pkg);
         }
+        // Through the TV's adb only when the TV has already accepted the key: a run nobody started must never show a prompt.
+        boolean viaAdb = cfg.memoryAdb && LocalAdb.authorized(ctx)
+                && LocalAdb.forceStop(ctx, targets, false) == AdbClient.Result.OK;
+        if (!viaAdb) {
+            for (String pkg : targets) am.killBackgroundProcesses(pkg);
+        }
+        int closed = targets.size();
         // The request is not the result: some TVs ignore it, so say how much memory actually came back.
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
             return;
         }
-        Log.i(TAG, "asked to close " + closed + " apps, kept " + keep.size() + ", free memory " + before + " -> " + availMb(am) + " MB");
+        Log.i(TAG, (viaAdb ? "adb stopped " : "asked to close ") + closed + " apps, kept " + keep.size() + ", free memory " + before + " -> " + availMb(am) + " MB");
     }
 
     /** Apps with a playing media session. Needs the notification listener; without it nothing is known. */

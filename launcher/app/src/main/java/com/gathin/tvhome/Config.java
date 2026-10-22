@@ -86,6 +86,8 @@ final class Config {
     final boolean overlayApplied;
     /** Three crashes in five minutes: the overlay and the optional features are off (docs/WATCHDOG.md). */
     final boolean safeMode;
+    /** Close apps through the TV's own adb (docs/MEMORY.md), for firmware that ignores the normal request. Off by default. */
+    final boolean memoryAdb;
 
     private Config(List<String> dockApps, List<String> hiddenApps, List<String> hiddenInputs, List<String> extraClocks, boolean showSearch, boolean showMemory, boolean showLive, boolean showShows, List<String> liveChannels, List<String> memoryProtect, String searchProvider,
                    String searchRegion, String searchKeyboard, List<String> searchExtras, List<String> keyApps, String youtubePackage, boolean autoTrim, int autoTrimBelowMb, int recentApps, int searchMaxResults, List<String> myServices, String liveTvPackage, String liveTvAction,
@@ -93,7 +95,7 @@ final class Config {
                    int columns, int rowsBelowDock, boolean animations, boolean advancedEffects,
                    boolean shamsiDate, boolean moduleCards, boolean reducedMotion, String vpnApp,
                    boolean showHomeSettingsShortcut, int backgroundColor, int skyIntensity, double skyLatitude, double skyLongitude, String themeStyle,
-                   File wallpaper, boolean overlayApplied, boolean safeMode) {
+                   File wallpaper, boolean overlayApplied, boolean safeMode, boolean memoryAdb) {
         this.dockApps = Collections.unmodifiableList(dockApps);
         this.hiddenApps = Collections.unmodifiableList(hiddenApps);
         this.hiddenInputs = Collections.unmodifiableList(hiddenInputs);
@@ -137,6 +139,7 @@ final class Config {
         this.wallpaper = wallpaper;
         this.overlayApplied = overlayApplied;
         this.safeMode = safeMode;
+        this.memoryAdb = memoryAdb;
     }
 
     /** The folder the theme tools push into; null when external storage is unavailable. */
@@ -163,6 +166,7 @@ final class Config {
         List<String> keyApps = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.key_apps)));
         String youtubePackage = res.getString(R.string.youtube_package).trim();
         boolean autoTrim = res.getBoolean(R.bool.auto_trim);
+        boolean memoryAdb = res.getBoolean(R.bool.memory_adb);
         int autoTrimBelowMb = res.getInteger(R.integer.auto_trim_below_mb);
         int recentApps = res.getInteger(R.integer.recent_apps);
         int searchMax = res.getInteger(R.integer.search_max_results);
@@ -215,6 +219,7 @@ final class Config {
             keyApps = stringList(json, "key_apps", keyApps);
             youtubePackage = string(json, "youtube_package", youtubePackage);
             autoTrim = bool(json, "auto_trim", autoTrim);
+            memoryAdb = bool(json, "memory_adb", memoryAdb);
             autoTrimBelowMb = integer(json, "auto_trim_below_mb", autoTrimBelowMb, 100, 1500);
             recentApps = integer(json, "recent_apps", recentApps, 0, 12);
             searchMax = integer(json, "search_max_results", searchMax, 1, 20);
@@ -241,6 +246,7 @@ final class Config {
         }
         if (safe) {
             showSearch = showMemory = showLive = showShows = false;
+            memoryAdb = false;
             skyIntensity = 0;
             advancedEffects = false;
             themeStyle = ThemeStyle.DEFAULT;
@@ -260,7 +266,7 @@ final class Config {
                 liveTv, liveTvAction, panelService, panelAction, inputAction,
                 Math.max(1, columns), Math.max(0, rowsBelow), animations, advancedEffects,
                 shamsi, moduleCards, reducedMotion, vpn, homeSettings, background,
-                Math.max(0, Math.min(100, skyIntensity)), skyLatitude, skyLongitude, themeStyle, wallpaper, applied, safe);
+                Math.max(0, Math.min(100, skyIntensity)), skyLatitude, skyLongitude, themeStyle, wallpaper, applied, safe, memoryAdb);
     }
 
     private static void syncThemeChoices(Context ctx, SharedPreferences choices, File dir, File config) {

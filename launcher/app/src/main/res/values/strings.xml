@@ -46,6 +46,10 @@
     <string name="memory_hint">Used in the last day. OK to choose, then close.</string>
     <string name="memory_loading">Checking what is running…</string>
     <string name="memory_needs_permission">One-time setup: run "appops set com.gathin.tvhome GET_USAGE_STATS allow" from your computer.</string>
+    <string name="memory_adb_waiting">Accept “Allow USB debugging?” on the TV (choose Always allow). Waiting…</string>
+    <string name="memory_adb_off">Nothing was closed: USB debugging is off. Turn it on in Settings, Developer options, then try again.</string>
+    <string name="memory_adb_allow">The TV did not accept the app’s key. Press Close all again and choose Allow on the prompt.</string>
+    <string name="memory_adb_failed">Could not close the apps through the TV’s debugging service (see docs/MEMORY.md).</string>
     <string name="memory_freed">Closed. About %1$d MB freed</string>
     <string name="memory_closed">Nothing was freed. The apps were small, or this TV ignores the request (see docs/MEMORY.md).</string>
     <string name="search_on_app">Search %1$s</string>

@@ -60,5 +60,42 @@ nothing: the apps stay in memory and swap stays full.
   X -> Y MB". If X and Y are close, the TV is ignoring the request.
 - To check by hand: note a background app's process id (`pidof <package>`), press Close all, and look again. A real close
   shows `ActivityManager: Killing ... kill background` in `adb logcat`.
-- What works on such a TV is closing from the computer over adb (`am kill-all`, `am force-stop <package>`), or lowering
-  Android's "Background process limit" in Developer options if the TV offers it.
+- What works on such a TV is closing through adb: from a computer (`am kill-all`, `am force-stop <package>`), or from the
+  launcher itself with `memory_adb`, below. Lowering Android's "Background process limit" in Developer options also
+  helps if the TV offers it.
+
+## Closing apps through adb (memory_adb)
+
+`"memory_adb": true` in a theme's `config.json` makes **Close all**, **Close selected** and auto-trim stop apps by asking
+the TV's own adb service to run `am force-stop <package>`, the same close that works from a computer. It is off by default.
+
+Setup: USB debugging must be on (Settings, Developer options). The first time you press Close all, the TV shows
+"Allow USB debugging?" for the launcher's key; choose **Always allow**. After that Close all is silent. If the TV forgets
+the key, the pill says so and asks again.
+
+What it can and cannot do:
+
+- It can run one command, `am force-stop`, for package names it has checked (letters, digits, underscores and dots,
+  nothing else). There is no way to hand it any other command.
+- It refuses system packages (`android`, the system UI, Settings, Google Play services and framework providers), this
+  launcher, and everything in `memory_protect`. At most 40 apps per run.
+- It connects to the TV's own address (127.0.0.1) only, keeps no connection open between runs, does not do wireless
+  debugging (TLS), and rejects oversized messages.
+- Auto-trim uses it only after the TV has accepted the key, so a run nobody started never shows a prompt.
+- It is off in safe mode (`docs/WATCHDOG.md`).
+
+The key is made on first use and kept in the launcher's private folder, which is excluded from backups; it is never
+logged. To take the permission back, use "Revoke USB debugging authorizations" in Developer options, or turn
+`memory_adb` off.
+
+If "Allow USB debugging?" never appears: the pill's own message ("Accept “Allow USB debugging?” on the TV…") shows, then
+gives up after 30 seconds, and `adb logcat -d | grep adbd_auth` shows `sending prompt with id N` followed by
+`prompt currently pending, skipping`. The TV's adb service is stuck on an earlier prompt that nobody answered (any device
+on your network that once connected with an unknown key can leave one) and will not show another. Turning USB debugging
+off and on does not help on some firmware: the service keeps running (check that its process id in the log is unchanged).
+Restarting the TV clears it, and the dialog then appears on the next Close all. The same stuck state stops a computer
+from pairing a new key, so it is not specific to the launcher.
+
+The trade-off: this needs USB debugging to stay on, which is also what lets a computer on your network control the TV
+(`docs/REMOTE.md`), so keep port 5555 off the internet. Anything that could run code inside the launcher could use the
+key, which is why the commands are fixed and limited as above. `adb logcat -s TvHome.Adb` shows each run.

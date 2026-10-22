@@ -2,6 +2,7 @@ package com.gathin.tvhome;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.content.Context;
 import android.app.AppOpsManager;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
@@ -78,6 +79,7 @@ public class MemoryActivity extends Activity {
     private AppAdapter adapter;
     private RecyclerView list;
     private boolean destroyed;
+    private boolean adb;   // close apps through the TV's own adb (config memory_adb)
     private Set<String> launchableCache;
     private final Map<String, Long> closedAt = new LinkedHashMap<>();   // when each app was closed here
 
@@ -95,6 +97,7 @@ public class MemoryActivity extends Activity {
         adapter = new AppAdapter();
         list.setAdapter(adapter);
 
+        adb = cfg.memoryAdb;
         protect.addAll(cfg.memoryProtect);
         protect.add(getPackageName());
         closeSelected.setOnClickListener(v -> closeApps(true));
@@ -232,13 +235,47 @@ public class MemoryActivity extends Activity {
         if (targets.isEmpty()) return;
         ActivityManager am = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
         final long before = availKb(am);
+        if (adb) {
+            closeThroughAdb(targets, am, before);
+            return;
+        }
         long now = System.currentTimeMillis();
         for (String pkg : targets) {
             am.killBackgroundProcesses(pkg);
             closedAt.put(pkg, now);
         }
         status.setText(R.string.memory_loading);
-        // Give the system a moment to tear the processes down, then measure and refresh.
+        measureAfter(targets, am, before, 3500);
+    }
+
+    /**
+     * Asks the TV's own adb to force-stop the apps (LocalAdb). The first run makes the TV show "Allow USB debugging?",
+     * so the screen says to accept it; later runs are silent. Runs off the main thread: it waits on a socket.
+     */
+    private void closeThroughAdb(List<String> targets, ActivityManager am, long before) {
+        final Context app = getApplicationContext();
+        status.setText(LocalAdb.authorized(app) ? R.string.memory_loading : R.string.memory_adb_waiting);
+        pool.execute(() -> {
+            AdbClient.Result result = LocalAdb.forceStop(app, targets, true);
+            ui.post(() -> {
+                if (destroyed) return;
+                if (result != AdbClient.Result.OK) {
+                    int message = result == AdbClient.Result.ADB_OFF ? R.string.memory_adb_off
+                            : result == AdbClient.Result.NOT_ALLOWED ? R.string.memory_adb_allow : R.string.memory_adb_failed;
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                    load();
+                    return;
+                }
+                long now = System.currentTimeMillis();
+                for (String pkg : targets) closedAt.put(pkg, now);
+                status.setText(R.string.memory_loading);
+                measureAfter(targets, am, before, 2000);
+            });
+        });
+    }
+
+    /** Give the system a moment to tear the processes down, then say how much memory came back and refresh. */
+    private void measureAfter(List<String> targets, ActivityManager am, long before, long delayMs) {
         ui.postDelayed(() -> {
             if (destroyed) return;
             long gained = (availKb(am) - before) / 1024;
@@ -249,7 +286,7 @@ public class MemoryActivity extends Activity {
             Toast.makeText(this, gained > 20 ? getString(R.string.memory_freed, (int) gained) : getString(R.string.memory_closed),
                     Toast.LENGTH_LONG).show();
             load();
-        }, 3500);
+        }, delayMs);
     }
 
     private static long availKb(ActivityManager am) {
