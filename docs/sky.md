@@ -51,16 +51,19 @@ Two days keep that fixed day instead: one with no sunrise or sunset at all (pola
 midnight sun), and one whose sunset the arithmetic puts past midnight, as in Reykjavik in June.
 Nothing is guessed from the time zone: it only decides which clock the minutes are counted on.
 
-**A theme cannot set this.** `sky_intensity` comes from a theme's `config.json`, but the place is a
-launcher build setting — `SkyView` reads those two string resources and `Config` never looks for them
-in a theme. A theme that wants the right sun says so in its own README, with the two lines above.
+**A theme can set it too, with no rebuild.** On this fork a theme's `config.json` can carry the place, and when both are
+set these are used first (both values are needed; a value out of range is ignored):
+
+```json
+{ "sky_intensity": 60, "sky_latitude": 51.5, "sky_longitude": -0.1 }
+```
 
 ## Cost
 
 `Sky` is pure maths — no Android types, no clock of its own; the caller passes the minutes since
 midnight, which is why the palette is unit-tested on the JVM. `SkyView` renders one 480×270 bitmap
 and redraws it once a minute, from the same minute tick that updates the clock. Nothing is animated
-and nothing is requested: the backdrop is the only change, and a TV with 1 GB of RAM has nothing to
+and no location updates are requested: the backdrop is the only change, and a TV with 1 GB of RAM has nothing to
 keep up with.
 
 Turning the key off restores the plain background (or the theme's `wallpaper`/`background_color`)

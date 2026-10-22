@@ -74,9 +74,11 @@ if ("$out" -match 'Error') { throw 'could not set the new launcher as home; the 
 $start = (& $py -I ..\tools\tv.py 'am start -W -a android.intent.action.MAIN -c android.intent.category.HOME -n com.gathin.tvhome/.MainActivity') -join "`n"
 Write-Host $start
 if ($start -notmatch 'Status: ok' -or $start -match '(?m)^Error') { throw "the new launcher did not start (see above); $StockLauncher was left enabled" }
+# Background start on TVs (some TCL builds) whose app-start manager blocks it; the op name differs by firmware.
 @(
     'pm grant com.gathin.tvhome android.permission.ACCESS_FINE_LOCATION 2>/dev/null; echo location-granted',
     'cmd package compile -m speed -f com.gathin.tvhome',
+    'appops set com.gathin.tvhome APP_AUTO_START allow 2>/dev/null || appops set com.gathin.tvhome AUTO_START allow 2>/dev/null; true',
     $disableStock,
     'cmd package set-home-activity --user 0 com.gathin.tvhome/.MainActivity'
 ) | & $py -I ..\tools\tv.py --batch

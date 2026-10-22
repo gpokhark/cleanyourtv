@@ -66,6 +66,19 @@ Any of these work: Claude Code (on [0G Private Computer](https://pc.0g.ai) or an
 The assistant backs up, debloats, builds and installs the launcher, and checks each step with
 screenshots pulled from the TV. With this repo as context it takes about fifteen minutes.
 
+### Already cloned the repo?
+
+Tell your assistant to read `CLAUDE.md` and `PROMPT.md` first, then it can skip writing tools from scratch:
+
+1. `python3 -m venv tools/venv && tools/venv/bin/pip install -r tools/requirements.txt`: the ADB client the scripts use.
+2. `TV_HOST=<tv ip> tools/venv/bin/python -I tools/tv.py --probe`: checks the connection and the Android version.
+3. `TV_HOST=<tv ip> launcher/build-and-install.sh`: builds and installs the launcher (needs JDK 17 and the Android
+   command-line tools, see below). Back up and debloat first, as `PROMPT.md` describes.
+4. `TV_HOST=<tv ip> tools/theme.sh <folder with your config.json>`: pushes your choices without a rebuild.
+5. Keep everything about your own TV (its address, backups, theme, notes) in a git-ignored `my-tv/` folder, and run
+   `tools/check-privacy.py --install-hook` once so each commit is scanned for IP addresses, MAC addresses, keys, emails and
+   the like before it can be pushed.
+
 ## What you get
 
 A home screen that looks like an Apple TV and gets out of the way:
@@ -494,6 +507,11 @@ The **TV** needs Android 8.0 (API 26) or newer: `minSdk` is a compile-time floor
 | **Add-ons** | Optional apps that plug in as module cards, kept in [`addons/`](addons/) and never built into the launcher |
 | **Clock screensaver** | A drifting clock over the glow, so nothing burns in |
 | **Remote keys** | Keeps the Input, YouTube and gear buttons working after the stock launcher is gone |
+| **Safe mode** | Three launcher crashes in five minutes switch the theme and optional features off until you push a fixed theme. See [`docs/WATCHDOG.md`](docs/WATCHDOG.md) |
+| **Theme styles** | The default dark look, or `abyss` (near-white accent, frosted translucent surfaces, rounder corners) with `theme_style`. See [`docs/THEMES.md`](docs/THEMES.md) |
+| **Close apps from the Memory pill** | `memory_adb` (off by default): for TVs whose firmware ignores the normal request, Close all and auto-trim stop apps through the TV's own adb, limited to one fixed command. See [`docs/MEMORY.md`](docs/MEMORY.md) |
+| **Live TV app** | Optional (`apps/live-tv`): a separate Flutter player for free public channels from iptv-org and other M3U lists, with a link checker, speed labels and an on-TV test mode. See [`docs/LIVETV_APP.md`](docs/LIVETV_APP.md) |
+| **Privacy check** | `tools/check-privacy.py` scans your staged changes for personal or device data before you commit |
 
 <details>
 <summary><b>Build it yourself</b></summary>

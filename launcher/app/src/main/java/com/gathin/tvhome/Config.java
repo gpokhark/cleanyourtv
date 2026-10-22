@@ -62,6 +62,25 @@ final class Config {
     final List<String> hiddenApps;
     /** Packages pre-seeded into the App library's "added" set (config.xml, library_apps); empty by default. */
     final List<String> libraryApps;
+    final List<String> hiddenInputs;
+    final List<String> extraClocks;
+    final boolean showSearch;
+    final boolean showMemory;
+    final boolean showLive;
+    final boolean showShows;
+    final List<String> liveChannels;
+    final List<String> memoryProtect;
+    final String searchProvider;
+    final String searchRegion;
+    final String searchKeyboard;
+    final List<String> searchExtras;
+    final List<String> keyApps;
+    final String youtubePackage;
+    final boolean autoTrim;
+    final int autoTrimBelowMb;
+    final int recentApps;
+    final int searchMaxResults;
+    final List<String> myServices;
     final String liveTvPackage;
     final String liveTvAction;
     final String liveTvInputId;
@@ -149,6 +168,11 @@ final class Config {
     final boolean restoreKeyServices;
     /** Whether themes may show a wallpaper (config.json, wallpaper). */
     final boolean wallpaperEnabled;
+    /** Where the sky's sunrise and sunset are computed for (sky_latitude, sky_longitude); NaN when not set. */
+    final double skyLatitude;
+    final double skyLongitude;
+    /** "default" or "abyss" (config.xml, theme_style), already normalised by {@link ThemeStyle#normalize}; default in safe mode. */
+    final String themeStyle;
     /** Full-screen picture behind the launcher, or null for the plain colour. */
     final File wallpaper;
     /** Rotating theme images, or the single wallpaper when no collection is configured. */
@@ -205,6 +229,11 @@ final class Config {
     /** Hold OK on a tile opens a menu (Move, Remove from Home, App info) instead of App info (config.xml / theme tile_menu). */
     final boolean tileMenu;
 
+    /** Three crashes in five minutes: the overlay and the optional features are off (docs/WATCHDOG.md). */
+    final boolean safeMode;
+    /** Close apps through the TV's own adb (docs/MEMORY.md), for firmware that ignores the normal request. Off by default. */
+    final boolean memoryAdb;
+
     private Config(List<String> dockApps, boolean fillDock, List<String> hiddenApps, List<String> libraryApps, String liveTvPackage,
                    String liveTvAction, String liveTvInputId, Map<String, String> launchActions, Map<String, String> appLabels,
                    Map<String, String> appBanners, String sourcePanelService, String sourcePanelAction,
@@ -218,7 +247,12 @@ final class Config {
                    List<RaceWeekend.Race> raceCalendar, boolean cinematicHome, boolean ambientGlow, boolean appGlow, boolean fadeRows, int homeIdleClockMinutes,
                    boolean keyFilter, boolean dockGlass, String glowStyle, boolean wallpaperCaptions,
                    boolean handleViewInputs, boolean tileMenu, boolean dockEvenPadding, boolean cinematicDots, boolean cinematicWhiteFocus, boolean wifiStatusColor, int cinematicScrim, int cinematicArt,
-                   Map<String, Set<String>> wallpaperMoods) {
+                   Map<String, Set<String>> wallpaperMoods,
+                   List<String> hiddenInputs, List<String> extraClocks, boolean showSearch, boolean showMemory, boolean showLive,
+                   boolean showShows, List<String> liveChannels, List<String> memoryProtect, String searchProvider, String searchRegion,
+                   String searchKeyboard, List<String> searchExtras, List<String> keyApps, String youtubePackage, boolean autoTrim,
+                   int autoTrimBelowMb, int recentApps, int searchMaxResults, List<String> myServices,
+                   double skyLatitude, double skyLongitude, String themeStyle, boolean safeMode, boolean memoryAdb) {
         this.handleViewInputs = handleViewInputs;
         this.tileMenu = tileMenu;
         this.inputKeycodes = inputKeycodes;
@@ -229,6 +263,25 @@ final class Config {
         this.fillDock = fillDock;
         this.hiddenApps = Collections.unmodifiableList(hiddenApps);
         this.libraryApps = Collections.unmodifiableList(libraryApps);
+        this.hiddenInputs = Collections.unmodifiableList(hiddenInputs);
+        this.extraClocks = Collections.unmodifiableList(extraClocks);
+        this.showSearch = showSearch;
+        this.showMemory = showMemory;
+        this.showLive = showLive;
+        this.showShows = showShows;
+        this.liveChannels = Collections.unmodifiableList(liveChannels);
+        this.memoryProtect = Collections.unmodifiableList(memoryProtect);
+        this.searchProvider = searchProvider;
+        this.searchRegion = searchRegion;
+        this.searchKeyboard = searchKeyboard;
+        this.searchExtras = Collections.unmodifiableList(searchExtras);
+        this.keyApps = Collections.unmodifiableList(keyApps);
+        this.youtubePackage = youtubePackage;
+        this.autoTrim = autoTrim;
+        this.autoTrimBelowMb = autoTrimBelowMb;
+        this.recentApps = recentApps;
+        this.searchMaxResults = searchMaxResults;
+        this.myServices = Collections.unmodifiableList(myServices);
         this.liveTvPackage = liveTvPackage;
         this.liveTvAction = liveTvAction;
         this.liveTvInputId = liveTvInputId;
@@ -275,6 +328,9 @@ final class Config {
         this.settingsKeyPanel = settingsKeyPanel;
         this.restoreKeyServices = restoreKeyServices;
         this.wallpaperEnabled = wallpaperEnabled;
+        this.skyLatitude = skyLatitude;
+        this.skyLongitude = skyLongitude;
+        this.themeStyle = themeStyle;
         this.wallpaper = wallpaper;
         this.wallpapers = Collections.unmodifiableList(wallpapers);
         this.wallpaperRotationMinutes = wallpaperRotationMinutes;
@@ -299,6 +355,8 @@ final class Config {
         this.wallpaperMoods = wallpaperMoods;
         this.glowStyle = glowStyle(glowStyle);
         this.wallpaperCaptions = wallpaperCaptions;
+        this.safeMode = safeMode;
+        this.memoryAdb = memoryAdb;
     }
 
     /** A known glow_style, or radial (the default) for anything else. */
@@ -317,6 +375,26 @@ final class Config {
         boolean fillDock = res.getBoolean(R.bool.fill_dock);
         List<String> hidden = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.hidden_apps)));
         List<String> libraryApps = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.library_apps)));
+        List<String> hiddenInputs = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.hidden_inputs)));
+        List<String> extraClocks = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.extra_clocks)));
+        boolean showSearch = res.getBoolean(R.bool.show_search);
+        boolean showMemory = res.getBoolean(R.bool.show_memory);
+        boolean showLive = res.getBoolean(R.bool.show_live);
+        boolean showShows = res.getBoolean(R.bool.show_shows);
+        List<String> liveChannels = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.live_channels)));
+        List<String> memoryProtect = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.memory_protect)));
+        String searchProvider = res.getString(R.string.search_provider).trim();
+        String searchRegion = res.getString(R.string.search_region).trim();
+        String searchKeyboard = res.getString(R.string.search_keyboard).trim();
+        List<String> searchExtras = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.search_extras)));
+        List<String> keyApps = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.key_apps)));
+        String youtubePackage = res.getString(R.string.youtube_package).trim();
+        boolean autoTrim = res.getBoolean(R.bool.auto_trim);
+        boolean memoryAdb = res.getBoolean(R.bool.memory_adb);
+        int autoTrimBelowMb = res.getInteger(R.integer.auto_trim_below_mb);
+        int recentApps = res.getInteger(R.integer.recent_apps);
+        int searchMax = res.getInteger(R.integer.search_max_results);
+        List<String> myServices = new ArrayList<>(Arrays.asList(res.getStringArray(R.array.my_services)));
         String liveTv = res.getString(R.string.live_tv_package).trim();
         String liveTvAction = res.getString(R.string.live_tv_action).trim();
         String liveTvInputId = res.getString(R.string.live_tv_input_id).trim();
@@ -383,18 +461,47 @@ final class Config {
         int cinematicScrim = res.getInteger(R.integer.cinematic_scrim);
         Map<String, Set<String>> wallpaperMoods = moods(res.getString(R.string.wallpaper_moods));
         String glowStyle = res.getString(R.string.glow_style);
+        double skyLatitude = Double.NaN;
+        double skyLongitude = Double.NaN;
+        String themeStyle = res.getString(R.string.theme_style);
         boolean applied = false;
 
         File dir = dir(ctx);
         File file = dir != null ? new File(dir, FILE_NAME) : null;
         boolean mounted = Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState());
-        JSONObject json = readOverlay(ctx, file, mounted);
+        // A theme push or reset invalidates choices made on the TV, and forgets recorded crashes. On first use,
+        // remember the current theme without clearing choices from an older launcher version.
+        SharedPreferences choices = ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
+        // Unmounted storage looks like a theme reset; compare only once the file is readable.
+        if (mounted) syncThemeChoices(ctx, choices, dir, file);
+        boolean safe = WatchdogApp.safeMode(ctx);
+        JSONObject json = safe ? null : readOverlay(ctx, file, mounted);
         if (json != null) {
             applied = true;
             dock = stringList(json, "dock_apps", dock);
             fillDock = bool(json, "fill_dock", fillDock);
             hidden = stringList(json, "hidden_apps", hidden);
             libraryApps = stringList(json, "library_apps", libraryApps);
+            hiddenInputs = stringList(json, "hidden_inputs", hiddenInputs);
+            extraClocks = stringList(json, "extra_clocks", extraClocks);
+            showSearch = bool(json, "show_search", showSearch);
+            showMemory = bool(json, "show_memory", showMemory);
+            showLive = bool(json, "show_live", showLive);
+            showShows = bool(json, "show_shows", showShows);
+            liveChannels = stringList(json, "live_channels", liveChannels);
+            memoryProtect = stringList(json, "memory_protect", memoryProtect);
+            searchProvider = string(json, "search_provider", searchProvider);
+            searchRegion = string(json, "search_region", searchRegion);
+            searchKeyboard = string(json, "search_keyboard", searchKeyboard);
+            searchExtras = stringList(json, "search_extras", searchExtras);
+            keyApps = stringList(json, "key_apps", keyApps);
+            youtubePackage = string(json, "youtube_package", youtubePackage);
+            autoTrim = bool(json, "auto_trim", autoTrim);
+            memoryAdb = bool(json, "memory_adb", memoryAdb);
+            autoTrimBelowMb = integer(json, "auto_trim_below_mb", autoTrimBelowMb, 100, 1500);
+            recentApps = integer(json, "recent_apps", recentApps, 0, 12);
+            searchMax = integer(json, "search_max_results", searchMax, 1, 20);
+            myServices = stringList(json, "my_services", myServices);
             liveTv = string(json, "live_tv_package", liveTv);
             liveTvAction = string(json, "live_tv_action", liveTvAction);
             liveTvInputId = string(json, "live_tv_input_id", liveTvInputId);
@@ -462,22 +569,29 @@ final class Config {
             JSONObject moods = json.optJSONObject("wallpaper_moods");
             if (moods != null) wallpaperMoods = moods(moods);
             glowStyle = string(json, "glow_style", glowStyle);
+            skyLatitude = decimal(json, "sky_latitude", skyLatitude, -90, 90);
+            skyLongitude = decimal(json, "sky_longitude", skyLongitude, -180, 180);
+            themeStyle = string(json, "theme_style", themeStyle);
         }
-        // A theme push or reset invalidates choices made on the TV. On first use, remember the
-        // current theme without clearing choices from an older launcher version.
-        SharedPreferences choices = ctx.getSharedPreferences(SETTINGS_NAME, Context.MODE_PRIVATE);
-        // Unmounted storage looks like a theme reset; compare only once the file is readable.
-        if (mounted) syncThemeChoices(choices, dir, file);
+        if (safe) {
+            showSearch = showMemory = showLive = showShows = false;
+            memoryAdb = false;
+            skyIntensity = 0;
+            advancedEffects = false;
+            themeStyle = ThemeStyle.DEFAULT;
+        }
+        themeStyle = ThemeStyle.normalize(themeStyle);
         int chosenColumns = choices.getInt("columns", columns);
         if (chosenColumns >= 4 && chosenColumns <= 7) columns = chosenColumns;
         int chosenRows = choices.getInt(ROWS_BELOW_DOCK_KEY, rowsBelow);
         if (chosenRows >= 0 && chosenRows <= 3) rowsBelow = chosenRows;
         animations = choices.getBoolean("animations", animations);
-        advancedEffects = choices.getBoolean("advanced_effects", advancedEffects);
+        if (!safe) advancedEffects = choices.getBoolean("advanced_effects", advancedEffects);
         File wallpaper = dir != null ? new File(dir, WALLPAPER_NAME) : null;
         if (wallpaper != null && !(wallpaper.isFile() && wallpaper.length() > 0)) wallpaper = null;
         // A theme can also switch the wallpaper off while the file is still there.
         boolean wallpaperEnabled = json == null || bool(json, "wallpaper", true);
+        if (safe) wallpaperEnabled = false;   // safe mode shows no wallpaper
         if (!wallpaperEnabled) wallpaper = null;
         int rotationMinutes = json == null ? 0 : integer(json, "wallpaper_rotation_minutes", 0, 0, 1440);
         int wallpaperDim = json == null ? 0 : integer(json, "wallpaper_dim", 0, 0, 90);
@@ -497,7 +611,7 @@ final class Config {
         String wallpaperChoice = choices.getString(WALLPAPER_CHOICE_KEY, null);
         List<File> chosen = WallpaperRotation.chosen(dir == null ? Collections.emptyList()
                 : WallpaperRotation.images(new File(dir, "wallpapers")), wallpaper, wallpaperChoice);
-        if (chosen != null) {
+        if (chosen != null && !safe) {   // safe mode shows no wallpaper, whatever was picked
             wallpapers.clear();
             wallpapers.addAll(chosen);
             wallpaper = chosen.isEmpty() ? null : chosen.get(0);
@@ -515,7 +629,8 @@ final class Config {
                 Math.max(0, Math.min(100, skyIntensity)), settingsKeycodes, settingsKeyPanel, restoreKeyServices, wallpaperEnabled, wallpaper,
                 wallpapers, rotationMinutes, wallpaperDim, dockOpacity, wallpaperOrder, applied,
                 festival, inputKeycodes, appKeys, stockHomeRedirect, json == null ? Collections.emptyList() : raceCalendar(json), cinematic, ambientGlow, appGlow, fadeRows,
-                Math.max(0, idleClockMinutes), keyFilter, dockGlass, glowStyle, wallpaperCaptions, handleViewInputs, tileMenu, dockEvenPadding, cinematicDots, cinematicWhiteFocus, wifiStatusColor, cinematicScrim, cinematicArt, wallpaperMoods);
+                Math.max(0, idleClockMinutes), keyFilter, dockGlass, glowStyle, wallpaperCaptions, handleViewInputs, tileMenu, dockEvenPadding, cinematicDots, cinematicWhiteFocus, wifiStatusColor, cinematicScrim, cinematicArt, wallpaperMoods,
+                hiddenInputs, extraClocks, showSearch, showMemory, showLive, showShows, liveChannels, memoryProtect, searchProvider, searchRegion, searchKeyboard, searchExtras, keyApps, youtubePackage, autoTrim, autoTrimBelowMb, recentApps, searchMax, myServices, skyLatitude, skyLongitude, themeStyle, safe, memoryAdb);
     }
 
     /**
@@ -548,7 +663,7 @@ final class Config {
         return races;
     }
 
-    private static void syncThemeChoices(SharedPreferences choices, File dir, File config) {
+    private static void syncThemeChoices(Context ctx, SharedPreferences choices, File dir, File config) {
         File revision = dir == null ? null : new File(dir, THEME_REVISION_NAME);
         String token = revisionToken(revision);
         String signature = fileStamp(config) + ":" + token;
@@ -561,10 +676,12 @@ final class Config {
                     .remove("advanced_effects").remove(ROWS_BELOW_DOCK_KEY).remove(WALLPAPER_CHOICE_KEY)
                     .remove(DOCK_OPACITY_KEY);
             editor.putString(THEME_SIGNATURE_KEY, signature).commit();
+            if (!"absent".equals(token)) WatchdogApp.clear(ctx);
         } else if (!seen.equals(signature)) {
             choices.edit().remove("columns").remove("animations").remove("advanced_effects")
                     .remove(ROWS_BELOW_DOCK_KEY).remove(WALLPAPER_CHOICE_KEY).remove(DOCK_OPACITY_KEY)
                     .putString(THEME_SIGNATURE_KEY, signature).commit();
+            WatchdogApp.clear(ctx);
         }
     }
 
@@ -670,6 +787,13 @@ final class Config {
         if (!(v instanceof Number)) return fallback;
         int i = ((Number) v).intValue();
         return i < min || i > max ? fallback : i;
+    }
+
+    private static double decimal(JSONObject o, String key, double fallback, double min, double max) {
+        Object v = o.opt(key);
+        if (!(v instanceof Number)) return fallback;
+        double d = ((Number) v).doubleValue();
+        return d < min || d > max ? fallback : d;
     }
 
     private static int color(JSONObject o, String key, int fallback) {

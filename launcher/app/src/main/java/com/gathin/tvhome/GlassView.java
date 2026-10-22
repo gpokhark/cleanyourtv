@@ -26,6 +26,7 @@ public class GlassView extends View {
     private int glowRgb = 0xFFFFFF;
     /** Glow strength: the white glow stays faint, a coloured one needs more alpha to read as warm light. */
     private int glowAlpha = 0x30;
+    private final int defaultGlowAlpha, fillTop, fillBottom, specularTop;
 
     public GlassView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -33,7 +34,12 @@ public class GlassView extends View {
         radius = 20f * density;
         rim.setStyle(Paint.Style.STROKE);
         rim.setStrokeWidth(1.5f * density);
-        rim.setColor(0xCCFFFFFF);
+        rim.setColor(Appearance.color(context, R.attr.glass_rim));
+        defaultGlowAlpha = Appearance.color(context, R.attr.glass_glow) >>> 24;
+        glowAlpha = defaultGlowAlpha;
+        fillTop = Appearance.color(context, R.attr.glass_fill_top);
+        fillBottom = Appearance.color(context, R.attr.glass_fill_bottom);
+        specularTop = Appearance.color(context, R.attr.glass_specular);
         glow.setStyle(Paint.Style.STROKE);
         // Cache the slab as a texture. The spring only changes translation, so the GPU can
         // move it without replaying clipPath and the glow on every frame. That path is
@@ -45,7 +51,7 @@ public class GlassView extends View {
     void setAccent(int argb) {
         if (argb == 0) {
             glowRgb = 0xFFFFFF;
-            glowAlpha = 0x30;
+            glowAlpha = defaultGlowAlpha;
             rim.setColor(0xCCFFFFFF);
         } else {
             glowRgb = argb & 0xFFFFFF;
@@ -66,8 +72,8 @@ public class GlassView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        fill.setShader(new LinearGradient(0, 0, 0, h, 0x3DFFFFFF, 0x12FFFFFF, Shader.TileMode.CLAMP));
-        specular.setShader(new LinearGradient(0, 0, 0, h * 0.45f, 0x66FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP));
+        fill.setShader(new LinearGradient(0, 0, 0, h, fillTop, fillBottom, Shader.TileMode.CLAMP));
+        specular.setShader(new LinearGradient(0, 0, 0, h * 0.45f, specularTop, specularTop & 0x00FFFFFF, Shader.TileMode.CLAMP));
     }
 
     @Override

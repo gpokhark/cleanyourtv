@@ -71,16 +71,30 @@ public class SkyView extends View {
 
     /** Today's sunrise and sunset at the configured place, or null without one (fixed reference day). */
     @Nullable
+    /** The place from a theme's sky_latitude and sky_longitude; NaN leaves it to config.xml's latitude and longitude. */
+    private double latitude = Double.NaN;
+    private double longitude = Double.NaN;
+
+    /** A theme can name the place without a rebuild ("sky_latitude", "sky_longitude"); NaN for either uses config.xml. */
+    public void setLocation(double lat, double lon) {
+        latitude = lat;
+        longitude = lon;
+    }
+
     private int[] sunTimes() {
-        String lat = getContext().getString(R.string.latitude);
-        String lon = getContext().getString(R.string.longitude);
-        if (lat.isEmpty() || lon.isEmpty()) return null;
-        try {
-            return Sun.riseAndSet(LocalDate.now(), Double.parseDouble(lat), Double.parseDouble(lon),
-                    ZoneId.systemDefault());
-        } catch (NumberFormatException e) {
-            return null;
+        double lat = latitude, lon = longitude;
+        if (Double.isNaN(lat) || Double.isNaN(lon)) {
+            String latText = getContext().getString(R.string.latitude);
+            String lonText = getContext().getString(R.string.longitude);
+            if (latText.isEmpty() || lonText.isEmpty()) return null;
+            try {
+                lat = Double.parseDouble(latText);
+                lon = Double.parseDouble(lonText);
+            } catch (NumberFormatException e) {
+                return null;
+            }
         }
+        return Sun.riseAndSet(LocalDate.now(), lat, lon, ZoneId.systemDefault());
     }
 
     private void render(boolean force) {

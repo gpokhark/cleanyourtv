@@ -67,6 +67,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.PopupWindow;
+import android.widget.TextClock;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -86,6 +87,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -173,6 +175,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private View btnInputs;
     /** config show_inputs_pill: false keeps the Inputs pill hidden even when the TV has inputs. */
     private boolean showInputsPill = true;
+    private View btnSearch;
+    private View btnMemory;
+    private View btnLive;
     private TextView btnWifi;
     /** The network pill's icon as last set, so a refresh that changes nothing does not lay the top bar out again. */
     private int wifiIcon;
@@ -230,6 +235,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private boolean bootToLiveTv;
     /** hidden_apps as the adapter sees them (config.xml or a theme's config.json): a hidden app gets no card either. */
     private Set<String> hiddenApps = Collections.emptySet();
+    /** Inputs menu rows never shown: matched against an input's label (exact) or its id (substring). */
+    private List<String> hiddenInputs = Collections.emptyList();
     private List<Cards.Card> cards = Collections.emptyList();
     /** The grid has been laid out and focused since the last resume; the card prompt waits for this. */
     private boolean tilesReady;
@@ -348,13 +355,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
     };
 
+    /** radius_tile of the current theme style, in pixels. */
+    private float tileRadius;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        density = getResources().getDisplayMetrics().density;
         // config.xml, overlaid by config.json from a pushed theme (see Config and tools/theme.sh).
         Config cfg = Config.load(this);
+        Appearance.apply(this, cfg);   // theme_style, before the layout is inflated
+        tileRadius = Appearance.dimension(this, R.attr.radius_tile);
+        setContentView(R.layout.activity_main);
+        density = getResources().getDisplayMetrics().density;
+        if (cfg.safeMode) Toast.makeText(this, R.string.safe_mode, Toast.LENGTH_LONG).show();
         appLibrarySelection = cfg.appLibrarySelection;
         // restore_key_services: after a force stop, put back the remote's accessibility helpers that Android took
         // off the list (needs WRITE_SECURE_SETTINGS, granted by build-and-install with RESTORE_KEY_SERVICES=1).
@@ -393,6 +406,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         getWindow().setBackgroundDrawable(null);
         wallpaperPlayer = new WallpaperPlayer(this, root, cfg);
         sky = findViewById(R.id.sky);
+        sky.setLocation(cfg.skyLatitude, cfg.skyLongitude);
         sky.setIntensity(cfg.skyIntensity);
         glass = findViewById(R.id.glass);
         if (festive) glass.setAccent(festival.accentColor());
@@ -443,6 +457,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         raceHeadline = findViewById(R.id.raceHeadline);
         raceSessions = findViewById(R.id.raceSessions);
         showStats = cfg.showStats;
+        addExtraClocks(cfg.extraClocks);
         shamsi = cfg.shamsiDate;
         greetingName = cfg.greetingName;
         if (shamsi) {
@@ -454,6 +469,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         vpnApp = cfg.vpnApp;
         moduleCards = cfg.moduleCards;
         hiddenApps = new HashSet<>(cfg.hiddenApps);
+        hiddenInputs = cfg.hiddenInputs;
 
         grid = findViewById(R.id.grid);
         rtlAppGrid = getResources().getBoolean(R.bool.rtl_app_grid);
@@ -511,7 +527,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             public void onChildViewDetachedFromWindow(@NonNull View v) {
             }
         });
-        if (dockRow) grid.addItemDecoration(new DockDecoration(COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding));
+        if (dockRow) grid.addItemDecoration(new DockDecoration(this, COLUMNS, density, cinematic, cfg.alwaysShowNames, cfg.dockOpacity, cfg.dockGlass, cfg.dockEvenPadding));
         if (cfg.fadeRows) TopFade.attach(grid, 48 * density);
         // Reduced motion: the tiles are simply there, with no entrance (reloadApps skips it there too).
         if (animations && !reducedMotion) {
@@ -590,6 +606,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         }
 
         btnInputs = findViewById(R.id.btnInputs);
+        btnSearch = findViewById(R.id.btnSearch);
+        btnSearch.setVisibility(cfg.showSearch ? View.VISIBLE : View.GONE);
+        btnSearch.setOnClickListener(v -> startActivity(new Intent(this, SearchActivity.class)));
+        btnLive = findViewById(R.id.btnLive);
+        btnLive.setVisibility(cfg.showLive ? View.VISIBLE : View.GONE);
+        btnLive.setOnClickListener(v -> startActivity(new Intent(this, LiveActivity.class)));
+        btnMemory = findViewById(R.id.btnMemory);
+        btnMemory.setVisibility(cfg.showMemory ? View.VISIBLE : View.GONE);
+        btnMemory.setOnClickListener(v -> startActivity(new Intent(this, MemoryActivity.class)));
         View btnSettings = findViewById(R.id.btnSettings);
         btnInputs.setOnClickListener(v -> showInputs());
         btnWifi.setOnClickListener(v -> openNetworkPill());
@@ -665,12 +690,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 focusTile(lastFocused % COLUMNS);
                 return true;
             }
-            int firstButton = btnInputs.getVisibility() == View.VISIBLE ? R.id.btnInputs : firstTopButton().getId();
+            int firstButton = firstTopButton().getId();   // Search, Live, Inputs, Wi-Fi, ... whichever shows first
             int leftButton = rtlMenuBar ? R.id.btnSettings : firstButton;
             int rightButton = rtlMenuBar ? firstButton : R.id.btnSettings;
             if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) return v.getId() == leftButton;
             return keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && v.getId() == rightButton;
         };
+        btnSearch.setOnKeyListener(pillKeys);
+        btnMemory.setOnKeyListener(pillKeys);
+        btnLive.setOnKeyListener(pillKeys);
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
@@ -781,6 +809,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (openLauncherSettingsIfAsked(intent)) return;
         if (openInputsIfAsked(intent)) return;
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
+        MemoryTrim.onHome(this, Config.load(this));
         grid.scrollToPosition(0);
         lastFocused = 0;
         lastFocusedKey = adapter.getItemCount() > 0 ? adapter.keyAt(0) : null;
@@ -810,6 +839,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onResume() {
         super.onResume();
+        InputKeyService.resume(this);   // in case Search was closed without giving it back
         // A festival that started or ended while Home was in the background: rebuild with or without it.
         if (festive != festival.active(LocalDate.now())) {
             recreate();
@@ -1504,7 +1534,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             lp.height = (int) h;
             glass.setLayoutParams(lp);
             // GlassView draws its slab inset by pad, i.e. exactly over the zoomed tile: same corners as the tile.
-            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density) * scale);
+            glass.setRadius(AppAdapter.cornerRadius(card.getWidth(), density, tileRadius) * scale);
         }
         glassCardW = card.getWidth();
         glassTargetX = x;
@@ -2131,6 +2161,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /** The first top-bar button after Inputs that is shown: the network pill, Reorder, then Settings (always there). */
     private View firstTopButton() {
+        if (btnSearch.getVisibility() == View.VISIBLE) return btnSearch;
+        if (btnLive.getVisibility() == View.VISIBLE) return btnLive;
+        if (btnInputs.getVisibility() == View.VISIBLE) return btnInputs;
         if (btnWifi.getVisibility() == View.VISIBLE) return btnWifi;
         if (btnReorder.getVisibility() == View.VISIBLE) return btnReorder;
         return findViewById(R.id.btnSettings);
@@ -2535,6 +2568,59 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return SystemSettings.intent(this, standardAction);
     }
 
+    /** Small clocks for other time zones under the date, each as "EDT 3:45 PM", separated by dots. */
+    private void addExtraClocks(List<String> zones) {
+        LinearLayout box = findViewById(R.id.extraClocks);
+        box.removeAllViews();
+        int shown = 0;
+        for (String entry : zones) {
+            // "America/New_York" shows its own abbreviation (EST or EDT by date); "IST|Asia/Kolkata" fixes the label,
+            // for zones this TV's language has no short name for (it would say GMT+05:30).
+            int bar = entry.indexOf('|');
+            String label = bar > 0 ? entry.substring(0, bar).trim() : null;
+            String id = (bar > 0 ? entry.substring(bar + 1) : entry).trim();
+            if (!java.util.Arrays.asList(java.util.TimeZone.getAvailableIDs()).contains(id)) continue;
+            if (shown++ > 0) {
+                TextView dot = new TextView(this);
+                dot.setText("  \u00B7  ");
+                dot.setTextSize(13);
+                dot.setTextColor(Appearance.color(this, R.attr.text_faint));
+                box.addView(dot);
+            }
+            box.addView(extraClock(id, label));
+        }
+        box.setVisibility(shown > 0 ? View.VISIBLE : View.GONE);
+    }
+
+    private TextClock extraClock(String zone, String label) {
+        TextClock t = new TextClock(this);
+        t.setTextSize(13);
+        t.setTextColor(Appearance.color(this, R.attr.text_muted));
+        t.setTypeface(getResources().getFont(R.font.outfit));
+        t.setSingleLine(true);
+        t.setIncludeFontPadding(false);
+        t.setTimeZone(zone);
+        String prefix = label == null ? "zzz" : "'" + label.replace("'", "") + "'";
+        t.setFormat12Hour(prefix + " h:mm a");
+        t.setFormat24Hour(prefix + " HH:mm");
+        return t;
+    }
+
+    /** With six or more pills the clock block runs out of room, so tighten them: smaller text and padding. */
+    private void compactPills() {
+        View[] pills = {btnSearch, btnLive, btnInputs, btnWifi, btnMemory, findViewById(R.id.btnSettings)};
+        int shown = 0;
+        for (View p : pills) if (p != null && p.getVisibility() == View.VISIBLE) shown++;
+        boolean tight = shown >= 6;
+        for (View p : pills) {
+            if (!(p instanceof TextView)) continue;
+            TextView t = (TextView) p;
+            t.setTextSize(tight ? 14 : 15);
+            t.setPadding((int) ((tight ? 12 : 16) * density), 0, (int) ((tight ? 15 : 20) * density), 0);
+            t.setCompoundDrawablePadding((int) ((tight ? 6 : 9) * density));
+        }
+    }
+
     /** Hides the Inputs pill when it would have nothing to list: streaming boxes have no HDMI-in, AV or tuner. */
     private void updateInputsButton() {
         if (!showInputsPill) {
@@ -2554,6 +2640,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         }
         btnInputs.setVisibility(any ? View.VISIBLE : View.GONE);
+        compactPills();
     }
 
     /** boot_to_live_tv: the first time Home comes up after the TV starts, open the Live TV app instead. Once per
@@ -2694,6 +2781,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         boolean tunerIsAnalog = false;
         if (tim != null) {
             List<TvInputInfo> inputs = new ArrayList<>(tim.getTvInputList());
+            // A CEC device on a port (a stick, a console) is registered as a child of that port's input and
+            // would list the same port twice, so keep only the port.
+            Set<String> ids = new HashSet<>();
+            for (TvInputInfo info : inputs) ids.add(info.getId());
+            for (Iterator<TvInputInfo> it = inputs.iterator(); it.hasNext(); ) {
+                TvInputInfo info = it.next();
+                String parent = info.getParentId();
+                if (info.getType() == TvInputInfo.TYPE_HDMI && parent != null && ids.contains(parent)) it.remove();
+                else if (isHiddenInput(info)) it.remove();
+            }
             // HDMI ports first in port order, then AV and the rest.
             Collections.sort(inputs, (a, b) -> {
                 boolean ha = a.getType() == TvInputInfo.TYPE_HDMI, hb = b.getType() == TvInputInfo.TYPE_HDMI;
@@ -2839,6 +2936,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         rows.getChildAt(0).requestFocus();
     }
 
+    private boolean isHiddenInput(TvInputInfo info) {
+        CharSequence label = info.loadLabel(this);
+        for (String h : hiddenInputs) {
+            if (h.isEmpty()) continue;
+            if (label != null && label.toString().equalsIgnoreCase(h) || info.getId().contains(h)) return true;
+        }
+        return false;
+    }
+
     private PopupWindow glassPopup(View panel, int width) {
         final PopupWindow popup = new PopupWindow(panel, width, ViewGroup.LayoutParams.WRAP_CONTENT, true);
         popup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));   // needed for Back to dismiss
@@ -2865,7 +2971,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     private void addSeparator(LinearLayout rows) {
         View line = new View(this);
-        line.setBackgroundColor(0x1FFFFFFF);
+        line.setBackgroundColor(Appearance.color(this, R.attr.divider));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, (int) density);
         int m = (int) (6 * density), h = (int) (12 * density);
         lp.setMargins(h, m, h, m);

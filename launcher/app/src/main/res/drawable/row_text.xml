@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text and icons on a list row (see input_row_bg): white when the row is focused, because the
+     focused row is light, see-through glass. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:color="@color/text_primary" />
+    <item android:color="?attr/text_primary" />
+</selector>

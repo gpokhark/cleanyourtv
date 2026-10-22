@@ -1,5 +1,6 @@
 package com.gathin.tvhome;
 
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
 import android.graphics.Paint;
@@ -18,6 +19,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final float density;
     private final Paint band = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint edge = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final float radius;
     private final RectF rect = new RectF();
 
     /** Extra band below the tiles for their names (always_show_names), in px. */
@@ -36,17 +38,19 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
      * @param lightGlass  a light frosted band like the pills, for a sky or wallpaper behind it.
      * @param evenPadding the band's padding is the gap between the tiles on all four sides (dock_even_padding).
      */
-    DockDecoration(int dockSize, float density, boolean translucent, boolean names, int opacity, boolean lightGlass,
+    DockDecoration(Context ctx, int dockSize, float density, boolean translucent, boolean names, int opacity, boolean lightGlass,
                    boolean evenPadding) {
         this.dockSize = dockSize;
         this.density = density;
+        this.radius = Appearance.dimension(ctx, R.attr.radius_dock);
         this.namesRoom = names ? 22 * density : 0;
         this.lightGlass = lightGlass;
         this.evenPadding = evenPadding;
-        band.setColor(translucent ? 0x8C121014 : (Math.round(opacity * 2.55f) << 24) | 0x141416);
+        int plain = Appearance.color(ctx, R.attr.dock_band);   // the style's own band; dock_opacity below 100 fades its colour
+        band.setColor(translucent ? 0x8C121014 : opacity >= 100 ? plain : (Math.round(opacity * 2.55f) << 24) | (plain & 0x00FFFFFF));
         edge.setStyle(Paint.Style.STROKE);
         edge.setStrokeWidth(density);
-        edge.setColor(lightGlass ? 0x38FFFFFF : translucent ? 0x26FFFFFF : 0x1FFFFFFF);
+        edge.setColor(lightGlass ? 0x38FFFFFF : translucent ? 0x26FFFFFF : Appearance.color(ctx, R.attr.dock_edge));
     }
 
     /** Concentric corners: the band's radius is the tiles' radius plus the band's padding around them. */

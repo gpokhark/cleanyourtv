@@ -713,3 +713,31 @@ tools/tv.py 'settings put global private_dns_mode opportunistic'
 The other failure mode reads differently: when the TV itself says "No internet", the resolver is down
 or unreachable, and the same command restores it. What the optional resolver does, and what it costs,
 is in the README's "Can it block ads inside apps too?".
+
+## After a firmware update
+
+An update can switch disabled packages back on or bring the stock launcher back as Home. Check with the same list you
+used to disable:
+
+```
+TV_HOST=192.168.1.50 tools/check.sh examples/xiaomi-mi-tv-4a/debloat.txt
+```
+
+It lists packages from the file that are enabled again, and says which app is Home. Add `--fix` to disable the
+packages again, and `--home your.launcher.package` if your launcher is not `com.gathin.tvhome`. Exit status is 0 when
+nothing drifted, 1 when something did, 2 when the TV could not be reached. If Home changed, disable the setup wizard
+first and then the stock launcher (the other order can leave a black screen).
+
+## A service does not start after a reinstall (TCL)
+
+On some TCL TVs a reinstall resets the app's `APP_AUTO_START` permission to `ignore`, and the TV's own app-start manager
+then refuses to bind the launcher's services. Symptoms: the remote's app buttons or the Shows tracker stop working,
+`dumpsys accessibility` lists `InputKeyService` under "Crashed services", and `logcat` shows
+`forbid bind service ... callee_does't_have_OP_AUTO_START_permission`. Fix:
+
+```
+appops set com.gathin.tvhome APP_AUTO_START allow
+```
+
+The build script now applies this itself after every install (trying `AUTO_START` if `APP_AUTO_START` does not exist). If you
+installed some other way, run the command above, then run the build script again (it re-applies the accessibility service) and turn the notification listener off and on.

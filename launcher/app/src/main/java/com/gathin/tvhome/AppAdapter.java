@@ -62,7 +62,7 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     static final class Entry {
-        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2, EMPTY = 3;
+        static final int APP = 0, HOME_SETTINGS = 1, CARD = 2, EMPTY = 3, SHOWS = 4;
 
         final int kind;
         final String label;
@@ -198,6 +198,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     /** Packages with a leanback entry at the last reload(): their tiles launch with the leanback category. */
     private Set<String> leanbackPackages = new HashSet<>();
     private final boolean showHomeSettings;
+    private final boolean showShows;
+    /** How many of the most recently used apps go right after the dock (config.xml, recent_apps). */
+    private final int recentCount;
     /** Calmer motion for weak GPUs (config.xml, reduced_motion): no overshoot, shorter fades. */
     private final boolean reducedMotion;
     /** The focus zoom may overshoot (config.xml, focus_overshoot). */
@@ -222,6 +225,8 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
         this.showHomeSettings = cfg.showHomeSettingsShortcut;
         this.showLibrary = cfg.appLibrary;
+        this.showShows = cfg.showShows;
+        this.recentCount = cfg.recentApps;
         this.reducedMotion = cfg.reducedMotion;
         this.focusOvershoot = cfg.focusOvershoot;
         this.rowsBelowDock = cfg.rowsBelowDock;
@@ -292,6 +297,13 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 fresh.add(new Entry(label, component, banner, icon));
             }
         }
+        // The Shows tile sits with the module cards: right after the dock, before the alphabetical grid.
+        if (showShows) {
+            fresh.add(new Entry(Entry.SHOWS, ctx.getString(R.string.shows),
+                    new ComponentName(ctx, ShowsActivity.class), null, ctx.getDrawable(R.drawable.ic_shows), null, 0));
+        }
+        // The most recently used apps that are not in the dock follow the cards, newest first.
+        final Map<String, Long> recent = recentCount > 0 ? recentRank(fresh) : Collections.<String, Long>emptyMap();
         Collections.sort(fresh, (a, b) -> {
             // The owner's own order first; tiles it does not know (new installs) follow by the rule below.
             int saved = Order.compare(savedRanks, a.component.flattenToShortString(), b.component.flattenToShortString());
@@ -303,8 +315,14 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 return Integer.compare(fa, fb);
             }
             // Cards come right after the configured dock apps, before the alphabetical grid.
-            boolean ca = a.kind == Entry.CARD, cb = b.kind == Entry.CARD;
+            boolean ca = a.kind == Entry.CARD || a.kind == Entry.SHOWS, cb = b.kind == Entry.CARD || b.kind == Entry.SHOWS;
             if (ca != cb) return ca ? -1 : 1;
+            Long ra = recent.get(a.pkg), rb = recent.get(b.pkg);
+            if (ra != null || rb != null) {
+                if (ra == null) return 1;
+                if (rb == null) return -1;
+                return Long.compare(rb, ra);
+            }
             return a.label.compareToIgnoreCase(b.label);
         });
         // Retain the optional Default-home tile until dependent tile-ordering work is merged.
@@ -331,6 +349,21 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (name == null || !name.startsWith("banner_")) return null;
         int id = ctx.getResources().getIdentifier(name, "drawable", ctx.getPackageName());
         return id != 0 ? ctx.getDrawable(id) : null;
+    }
+
+    /** The last-used time of the {@code recentCount} most recently used plain apps that are not in the dock. */
+    private Map<String, Long> recentRank(List<Entry> entries) {
+        Set<String> eligible = new HashSet<>();
+        for (Entry e : entries) {
+            if (e.kind == Entry.APP && !favourites.contains(e.pkg)) eligible.add(e.pkg);
+        }
+        Map<String, Long> used = AppUsage.lastUsed(ctx, 7L * 24 * 60 * 60 * 1000);
+        used.keySet().retainAll(eligible);
+        List<Map.Entry<String, Long>> sorted = new ArrayList<>(used.entrySet());
+        Collections.sort(sorted, (a, b) -> Long.compare(b.getValue(), a.getValue()));
+        Map<String, Long> top = new HashMap<>();
+        for (int i = 0; i < sorted.size() && i < recentCount; i++) top.put(sorted.get(i).getKey(), sorted.get(i).getValue());
+        return top;
     }
 
     private Drawable loadBanner(PackageManager pm, ResolveInfo ri) {
@@ -472,6 +505,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         if (e.kind == Entry.HOME_SETTINGS) {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            return;
+        }
+        if (e.kind == Entry.SHOWS) {
+            ctx.startActivity(new Intent(ctx, ShowsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
             return;
         }
         Intent i = new Intent(Intent.ACTION_MAIN)
@@ -668,9 +705,9 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return Color.HSVToColor(hsv);
     }
 
-    /** Corner radius for a tile of this width: 16dp at the design width, proportionally less when smaller. */
-    static float cornerRadius(int tileWidthPx, float density) {
-        return 16f * density * Math.min(1f, tileWidthPx / (DESIGN_W_DP * density));
+    /** Corner radius for a tile of this width: {@code baseRadiusPx} (radius_tile, 16dp by default) at the design width, proportionally less when smaller. */
+    static float cornerRadius(int tileWidthPx, float density, float baseRadiusPx) {
+        return baseRadiusPx * Math.min(1f, tileWidthPx / (DESIGN_W_DP * density));
     }
 
     static final class Holder extends RecyclerView.ViewHolder {
@@ -704,11 +741,12 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             this.overshoot = overshoot;
 
             final float density = v.getResources().getDisplayMetrics().density;
+            final float radius = Appearance.dimension(v.getContext(), R.attr.radius_tile);
             card.setOutlineProvider(new ViewOutlineProvider() {
                 @Override
                 public void getOutline(View view, Outline outline) {
-                    // 16dp at the design width, scaled down with the tile so small tiles keep the same shape.
-                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), cornerRadius(view.getWidth(), density));
+                    // radius_tile at the design width, scaled down with the tile so small tiles keep the same shape.
+                    outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), cornerRadius(view.getWidth(), density, radius));
                 }
             });
             card.setClipToOutline(true);

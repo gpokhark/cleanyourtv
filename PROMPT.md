@@ -56,7 +56,9 @@ Back up first
   back with it - and have me confirm the TV is on Ethernet again, not Wi-Fi. Don't trust `nc` on macOS:
   Local Network privacy can block it too, and its "No route to host" proves nothing; only "Connection
   refused" does. Port 5555 is plaintext, and on firmware with `ro.adb.secure=0` any device on the LAN
-  can get a shell.
+  can get a shell. The one exception: if I choose `memory_adb` (docs/MEMORY.md), the launcher
+  closes apps through the TV's own adb and needs USB debugging to stay on. Explain that trade-off, ask me, and
+  leave it on only if I say so.
 
 Debloat
 - List installed packages and sort them into: manufacturer telemetry/analytics, manufacturer content

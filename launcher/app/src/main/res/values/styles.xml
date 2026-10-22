@@ -4,6 +4,98 @@
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:colorBackground">@android:color/black</item>
         <item name="android:windowAnimationStyle">@null</item>
+        <!-- Dark palette: the default look; theme_style can layer ThemeOverlay.TvHome.Abyss over it (Appearance). -->
+        <item name="text_primary">@color/text_primary</item>
+        <item name="text_strong">@color/text_strong</item>
+        <item name="text_emphasis">@color/text_emphasis</item>
+        <item name="text_body">@color/text_body</item>
+        <item name="text_secondary">@color/text_secondary</item>
+        <item name="text_label">@color/text_label</item>
+        <item name="text_muted">@color/text_muted</item>
+        <item name="text_eyebrow">@color/text_eyebrow</item>
+        <item name="text_hint">@color/text_hint</item>
+        <item name="text_dim">@color/text_dim</item>
+        <item name="text_faint">@color/text_faint</item>
+        <item name="text_settings_note">@color/text_settings_note</item>
+        <item name="text_success">@color/text_success</item>
+        <item name="text_on_focus">@color/text_on_light</item>
+        <item name="text_on_focus_mid">@color/text_on_light_mid</item>
+        <item name="text_on_focus_dim">@color/text_on_light_dim</item>
+        <item name="window_bg">@android:color/black</item>
+        <item name="settings_bg">#FF101419</item>
+        <item name="icon_tint">#FFFFFFFF</item>
+        <item name="pill_focus_fill">#F5FFFFFF</item>
+        <item name="pill_fill_top">#2EFFFFFF</item>
+        <item name="pill_fill_bottom">#14FFFFFF</item>
+        <item name="pill_stroke">#38FFFFFF</item>
+        <item name="row_focus_top">#4DFFFFFF</item>
+        <item name="row_focus_bottom">#26FFFFFF</item>
+        <item name="row_focus_stroke">#80FFFFFF</item>
+        <item name="tile_bg">#FF1C1C1E</item>
+        <item name="panel_top">#F22A2A2E</item>
+        <item name="panel_bottom">#F5161618</item>
+        <item name="panel_stroke">#33FFFFFF</item>
+        <item name="dock_band">#FF141416</item>
+        <item name="dock_edge">#1FFFFFFF</item>
+        <item name="divider">#1FFFFFFF</item>
+        <item name="divider_strong">#33FFFFFF</item>
+        <item name="glass_fill_top">#3DFFFFFF</item>
+        <item name="glass_fill_bottom">#12FFFFFF</item>
+        <item name="glass_specular">#66FFFFFF</item>
+        <item name="glass_rim">#CCFFFFFF</item>
+        <item name="glass_glow">#30FFFFFF</item>
+        <item name="choice_bg">#FF242B34</item>
+        <item name="choice_focus_fill">#5574A987</item>
+        <item name="choice_focus_stroke">#FFB9E7C7</item>
+        <item name="choice_focus_text">@color/text_primary</item>
+        <item name="choice_selected_fill">#334DAE6D</item>
+        <item name="choice_selected_stroke">#FF4DAE6D</item>
+        <item name="radius_pill">21dp</item>
+        <item name="radius_row">13dp</item>
+        <item name="radius_choice">14dp</item>
+        <item name="radius_panel">20dp</item>
+        <item name="radius_tile">16dp</item>
+        <item name="radius_dock">26dp</item>
+    </style>
+
+    <!-- theme_style "abyss", applied on top of Theme.TvHome by Appearance.apply before setContentView: a near-white
+         accent for focus, translucent white surfaces with a faint light edge in place of opaque ones, and rounder
+         corners. Only what differs from the default is listed. -->
+    <style name="ThemeOverlay.TvHome.Abyss" parent="">
+        <item name="text_settings_note">#FFA1A1A6</item>
+        <item name="settings_bg">#FF0A0A0B</item>
+        <item name="pill_focus_fill">#FFF5F5F7</item>
+        <item name="pill_fill_top">#1FFFFFFF</item>
+        <item name="pill_fill_bottom">#14FFFFFF</item>
+        <item name="pill_stroke">#24FFFFFF</item>
+        <item name="row_focus_top">#33F5F5F7</item>
+        <item name="row_focus_bottom">#1FF5F5F7</item>
+        <item name="row_focus_stroke">#99F5F5F7</item>
+        <item name="tile_bg">#FF111113</item>
+        <item name="panel_top">#E61E1E21</item>
+        <item name="panel_bottom">#E6141416</item>
+        <item name="panel_stroke">#24FFFFFF</item>
+        <item name="dock_band">#14FFFFFF</item>
+        <item name="dock_edge">#24FFFFFF</item>
+        <item name="divider">#FF373737</item>
+        <item name="divider_strong">#FF4B4B4B</item>
+        <item name="glass_fill_top">#26FFFFFF</item>
+        <item name="glass_fill_bottom">#0DFFFFFF</item>
+        <item name="glass_specular">#33FFFFFF</item>
+        <item name="glass_rim">#E6F5F5F7</item>
+        <item name="glass_glow">#24FFFFFF</item>
+        <item name="choice_bg">#FF1A1A1C</item>
+        <item name="choice_focus_fill">#FFF5F5F7</item>
+        <item name="choice_focus_stroke">#FFF5F5F7</item>
+        <item name="choice_focus_text">@color/text_on_light</item>
+        <item name="choice_selected_fill">#FF373737</item>
+        <item name="choice_selected_stroke">#66F5F5F7</item>
+        <item name="radius_pill">24dp</item>
+        <item name="radius_row">24dp</item>
+        <item name="radius_choice">24dp</item>
+        <item name="radius_panel">24dp</item>
+        <item name="radius_tile">24dp</item>
+        <item name="radius_dock">32dp</item>
     </style>
 
     <!-- Frosted pill, tvOS style. -->
@@ -42,7 +134,7 @@
         <item name="android:paddingStart">18dp</item>
         <item name="android:paddingEnd">18dp</item>
         <item name="android:background">@drawable/settings_choice_bg</item>
-        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:textColor">@drawable/settings_choice_text</item>
         <item name="android:textSize">18sp</item>
         <item name="android:focusable">true</item>
         <item name="android:clickable">true</item>

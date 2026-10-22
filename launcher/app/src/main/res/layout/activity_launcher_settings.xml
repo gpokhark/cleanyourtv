@@ -2,7 +2,7 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF101419"
+    android:background="?attr/settings_bg"
     android:fillViewport="true">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/launcher_settings"
-            android:textColor="#FFFFFFFF"
+            android:textColor="?attr/text_primary"
             android:textSize="34sp" />
 
         <TextView
@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
             android:text="@string/columns_label"
-            android:textColor="#FFFFFFFF"
+            android:textColor="?attr/text_primary"
             android:textSize="20sp" />
 
         <LinearLayout
@@ -108,7 +108,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="@string/advanced_effects_warning"
-            android:textColor="#FFACB8C1"
+            android:textColor="?attr/text_settings_note"
             android:textSize="14sp" />
 
         <TextView
@@ -122,7 +122,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="7dp"
             android:text="@string/follow_theme_hint"
-            android:textColor="#FFACB8C1"
+            android:textColor="?attr/text_settings_note"
             android:textSize="14sp" />
 
         <TextView
@@ -136,7 +136,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="7dp"
             android:text="@string/home_settings_help"
-            android:textColor="#FFACB8C1"
+            android:textColor="?attr/text_settings_note"
             android:textSize="14sp" />
 
         <TextView

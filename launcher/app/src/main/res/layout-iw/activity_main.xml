@@ -4,7 +4,7 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FF000000">
+    android:background="?attr/window_bg">
 
     <!-- Time-of-day backdrop, drawn once a minute (config.xml sky_intensity; 0 keeps it hidden).
          Keep in step with layout/activity_main.xml: every view there must exist here too. -->
@@ -120,7 +120,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:gravity="right"
-            android:textColor="#FFFFFFFF"
+            android:textColor="?attr/text_primary"
             android:textSize="48sp"
             android:fontFamily="@string/font_light"
             android:letterSpacing="-0.02"
@@ -136,7 +136,7 @@
             android:layout_marginEnd="4dp"
             android:layout_marginTop="12dp"
             android:singleLine="true"
-            android:textColor="#B3FFFFFF"
+            android:textColor="?attr/text_secondary"
             android:textSize="15sp"
             android:fontFamily="@string/font_light"
             android:visibility="gone" />
@@ -194,7 +194,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:ellipsize="end"
-                        android:textColor="#E6FFFFFF"
+                        android:textColor="?attr/text_emphasis"
                         android:textSize="17sp"
                         android:fontFamily="@string/font_regular"
                         android:letterSpacing="0.02"
@@ -210,11 +210,20 @@
                         android:ellipsize="end"
                         android:format12Hour="@string/date_format"
                         android:format24Hour="@string/date_format"
-                        android:textColor="#A6FFFFFF"
+                        android:textColor="?attr/text_label"
                         android:textSize="14sp"
                         android:fontFamily="@string/font_regular"
                         android:letterSpacing="0.14"
                         android:textAllCaps="true" />
+
+                    <!-- Extra time zones (config: extra_clocks), small. Filled in code. -->
+                    <LinearLayout
+                        android:id="@+id/extraClocks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:orientation="horizontal"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <View
@@ -224,7 +233,7 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="8dp"
-                    android:background="#33FFFFFF" />
+                    android:background="?attr/divider_strong" />
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -237,7 +246,7 @@
                         android:layout_height="wrap_content"
                         android:singleLine="true"
                         android:ellipsize="end"
-                        android:textColor="#8CFFFFFF"
+                        android:textColor="?attr/text_eyebrow"
                         android:textSize="12sp"
                         android:fontFamily="@string/font_medium"
                         android:letterSpacing="0.22"
@@ -259,7 +268,7 @@
                             android:layout_marginBottom="8dp"
                             android:format12Hour="a"
                             android:format24Hour=""
-                            android:textColor="#B3FFFFFF"
+                            android:textColor="?attr/text_secondary"
                             android:textSize="15sp"
                             android:fontFamily="@string/font_medium"
                             android:letterSpacing="0"
@@ -273,7 +282,7 @@
                             android:layout_marginEnd="6dp"
                             android:format12Hour="h:mm"
                             android:format24Hour="HH:mm"
-                            android:textColor="#FFFFFFFF"
+                            android:textColor="?attr/text_primary"
                             android:textSize="52sp"
                             android:fontFamily="@string/font_light"
                             android:letterSpacing="-0.04"
@@ -317,6 +326,20 @@
                 android:orientation="horizontal">
 
                 <TextView
+                    android:id="@+id/btnSearch"
+                    style="@style/TopButton"
+                    android:text="@string/search"
+                    android:drawableStart="@drawable/ic_search"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
+                    android:id="@+id/btnLive"
+                    style="@style/TopButton"
+                    android:text="@string/live"
+                    android:drawableStart="@drawable/ic_livetv"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
                     android:id="@+id/btnSettings"
                     style="@style/TopButton"
                     android:text="@string/settings"
@@ -353,6 +376,13 @@
                     style="@style/TopButton"
                     android:text="@string/inputs"
                     android:drawableStart="@drawable/ic_input"
+                    android:nextFocusDown="@+id/grid" />
+
+                <TextView
+                    android:id="@+id/btnMemory"
+                    style="@style/TopButton"
+                    android:text="@string/memory"
+                    android:drawableStart="@drawable/ic_memory"
                     android:nextFocusDown="@+id/grid" />
             </LinearLayout>
         </RelativeLayout>

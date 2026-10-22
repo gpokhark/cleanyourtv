@@ -33,6 +33,77 @@
         <item>com.mitv.gallery</item>
     </string-array>
 
+    <!-- Inputs menu rows never shown: an input's label (exact, any case) or part of its id. For ports that
+         exist on the TV but that you never use, or that report "Connected" with nothing plugged in. -->
+    <string-array name="hidden_inputs" />
+
+    <!-- Small extra clocks under the date: a time zone id (America/New_York) or "Label|zone id" (IST|Asia/Kolkata).
+         A bare id shows the TV's own abbreviation (EST or EDT depending on the date), which can read GMT+05:30 for
+         zones its language has no short name for: give those a label. Empty = none. -->
+    <string-array name="extra_clocks" />
+
+    <!-- Search pill: look up a movie or series and see which of your services carry it at no extra cost
+         (included in a subscription, or free). Off by default. Setup: docs/SEARCH.md -->
+    <bool name="show_search">false</bool>
+    <!-- Where availability comes from. Only "watchmode" so far; see SearchProviders for adding another. -->
+    <string name="search_provider" translatable="false">watchmode</string>
+    <!-- Country whose catalogue is checked (ISO code, e.g. US, GB, CA). -->
+    <string name="search_region" translatable="false">US</string>
+    <!-- Keyboard to switch to when Search opens, as "package/.ImeService" (see `ime list -s`); empty = leave it.
+         For TVs whose default keyboard is a phone bridge with no on-screen keys ("use the keyboard on your mobile
+         device"). Needs: adb shell pm grant com.gathin.tvhome android.permission.WRITE_SECURE_SETTINGS -->
+    <string name="search_keyboard" translatable="false"></string>
+    <!-- Shows tile in the grid: keeps your place (season, episode and how far in) in the shows you are working
+         through, and opens the next one. Needs a catalogue per show and a one-time permission. Off by default.
+         See docs/SHOWS.md -->
+    <!-- The YouTube app to follow for "Last on YouTube" on the Shows screen: its package name, empty = off. It saves the
+         title and channel of videos watched for about 30 seconds, and needs the Shows notification listener
+         (docs/SHOWS.md). Android TV: com.google.android.youtube.tv. Fire TV: com.amazon.firetv.youtube. -->
+    <string name="youtube_package"></string>
+    <bool name="show_shows">false</bool>
+
+    <!-- Live pill: your favourite free live channels. Each entry is "Name|android.package|link". The link opens that
+         channel in the app (Pluto TV accepts https://pluto.tv/us/live-tv/<channel>); leave it empty to just open the
+         app. Off by default. See docs/LIVE.md -->
+    <bool name="show_live">false</bool>
+    <string-array name="live_channels" />
+
+    <!-- Memory pill: lists the apps used recently so you can close the ones you pick (or all). Off by default.
+         Needs once: adb shell appops set com.gathin.tvhome GET_USAGE_STATS allow  (see docs/MEMORY.md) -->
+    <bool name="show_memory">false</bool>
+    <!-- Apps the Memory screen never lists, as package names. The launcher itself is always left out. -->
+    <string-array name="memory_protect" />
+    <!-- Close idle apps by itself when Home is pressed and free memory is low (see docs/MEMORY.md). Off by default.
+         Needs the same usage-statistics permission as the Memory pill. The app you just left is kept. -->
+    <bool name="auto_trim">false</bool>
+    <!-- Close apps through the TV's own adb debugging service instead of asking Android politely. For firmware that
+         ignores the request (the pill then frees nothing). Needs USB debugging on in Developer options, and the TV
+         shows "Allow USB debugging?" once, which you accept with "Always allow". It can only run "am force-stop" on
+         ordinary apps (docs/MEMORY.md, "Closing apps through adb"). Off by default. -->
+    <bool name="memory_adb">false</bool>
+    <!-- "Low" for auto_trim: free memory in MB below which it runs. -->
+    <integer name="auto_trim_below_mb">500</integer>
+
+    <!-- Apps used most recently, put in the grid right after the dock, newest first. 0 = off. Needs the
+         usage-statistics permission (see docs/MEMORY.md). -->
+    <integer name="recent_apps">0</integer>
+
+    <!-- Buttons next to the filter that send what you typed to another app's own search, for things a title
+         catalogue cannot hold (YouTube is millions of user videos): "Label|android.package|link", where {q} is
+         the text, e.g. YouTube|com.google.android.youtube.tv|https://www.youtube.com/results?search_query={q} -->
+    <string-array name="search_extras" />
+
+    <!-- Remote buttons that open an app, "key|android.package|link" (link optional; "action:name" starts an app that has no
+         launcher entry and only answers to its own action). The key is a number or a name
+         such as KEYCODE_PROG_RED. Needs the key service (INPUT_KEY_SERVICE=1). Unrecognised buttons are logged as
+         "TvHome.Keys key N" so the number can be found. -->
+    <string-array name="key_apps" />
+
+    <!-- Titles looked up per search; each costs one request after the search itself. -->
+    <integer name="search_max_results">8</integer>
+    <!-- Services you can watch without paying extra: "Label|android.package|provider ids" -->
+    <string-array name="my_services" />
+
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
     <string name="live_tv_package" translatable="false">com.mediatek.wwtv.tvcenter</string>
 
@@ -353,4 +424,11 @@
          colour washes down from the top edge and fades to black, brightest along the top). The cinematic shelf
          keeps its own glow. Can also be set with "glow_style": "horizon" in a theme's config.json. -->
     <string name="glow_style" translatable="false">radial</string>
+    <!-- Look of the launcher: "default" (today's dark look) or "abyss" (near-white accent, frosted translucent surfaces,
+         rounder corners). Anything else means default, and safe mode forces default. Can also be set with
+         "theme_style": "abyss" in a theme's config.json. See docs/THEMES.md -->
+    <string name="theme_style" translatable="false">default</string>
+    <!-- Where the sky computes sunrise and sunset, when the TV holds no location of its own. Only a theme's
+         config.json sets them ("sky_latitude": 51.5, "sky_longitude": -0.1); one decimal is plenty. Unset, the
+         sky uses the TV's last known location, and without one the fixed times. -->
 </resources>
