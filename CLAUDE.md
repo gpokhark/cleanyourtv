@@ -47,6 +47,11 @@ setting and configured through `Config.java`; the config overlay is JSON pushed 
 - `main` mirrors `upstream/main` (fast-forward only). Work goes on `dev`; push with `--force-with-lease` after rebasing.
 - Commit only when asked. End commit messages with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 
+## Syncing from upstream
+
+- Our deliberate changes live in `docs/UPSTREAM_SYNC.md`. On a conflict keep ours; take upstream only for a real bug
+  fix, crash robustness or a measured gain. Do not accept changes just because they are newer. Read that file first.
+
 ## Backups
 
 - Never overwrite, edit or delete an existing backup (`backup/` and any per-TV backup folder). A new snapshot goes in a
