@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'screens/home.dart';
+import 'screens/smoke.dart';
 import 'widgets/logo_cache.dart';
 
 /// Build with --dart-define=PERF=true to log every frame's build/raster time to logcat.
@@ -14,7 +15,8 @@ Future<void> main() async {
   // plays. Without this line the app uses the TV's own decoders.
   fvp.registerWith();
   await LogoCache.init();
-  runApp(const MyApp());
+  final smoke = await smokeRequest();
+  runApp(smoke == null ? const MyApp() : MaterialApp(debugShowCheckedModeBanner: false, home: SmokeScreen(request: smoke)));
   if (_perf) {
     SchedulerBinding.instance.addTimingsCallback((timings) {
       for (final t in timings) {

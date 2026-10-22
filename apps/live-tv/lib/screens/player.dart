@@ -55,11 +55,17 @@ class _PlayerState extends State<Player> {
     super.dispose();
   }
 
+  /// How many audio tracks the stream has, and what the last pick was; left and right change the track when there is more than one.
+  int audioCount = 1;
+  String? audioNote;
+
   Future<void> _open() async {
     final gen = ++_generation;
     final old = controller;
     controller = null;
     failed = false;
+    audioCount = 1;
+    audioNote = null;
     showInfo = true;          // banner stays up until the video actually starts
     infoTimer?.cancel();
     setState(() {});
@@ -79,6 +85,10 @@ class _PlayerState extends State<Player> {
       if (gen != _generation) return;
       startTimer?.cancel();
       _preferStereo(c);
+      // The track list can be empty right at the start of a live stream: look again after it has been playing a moment.
+      Timer(const Duration(seconds: 3), () {
+        if (gen == _generation && mounted) _preferStereo(c);
+      });
       await c.play();
       if (mounted) setState(_flashInfo);
     } catch (_) {
@@ -91,17 +101,40 @@ class _PlayerState extends State<Player> {
   void _preferStereo(VideoPlayerController c) {
     try {
       final audio = c.getMediaInfo()?.audio;
-      if (audio == null || audio.length < 2) return;
-      final stereo = audio.indexWhere((a) => a.codec.channels == 2);
       final active = c.getActiveAudioTracks();
-      debugPrint('AUDIO tracks=${[for (final a in audio) '${a.index}:${a.codec.channels}ch'.toString()]} active=$active -> stereo=$stereo');
+      debugPrint('AUDIO ${channel.name}: tracks=${audio == null ? 'none' : [for (final a in audio) '${a.index}:${a.codec.channels}ch'].toString()} active=$active');
+      if (audio == null || audio.length < 2) return;
+      if (mounted && audioCount != audio.length) setState(() => audioCount = audio.length);
+      final stereo = audio.indexWhere((a) => a.codec.channels == 2);
       if (stereo < 0) return;
       if (active != null && active.length == 1 && active.first == stereo) return;
       c.setAudioTracks([stereo]);
-      debugPrint('AUDIO now active=${c.getActiveAudioTracks()}');
+      debugPrint('AUDIO ${channel.name}: chose track $stereo, active now ${c.getActiveAudioTracks()}');
     } catch (e) {
-      debugPrint('AUDIO track choice failed: $e');
+      debugPrint('AUDIO ${channel.name}: track choice failed: $e');
     }
+  }
+
+  /// Left and right: the previous or next audio track, shown in the banner ("Audio 2 of 5  ·  stereo  ·  hin").
+  void _cycleAudio(int delta) {
+    final c = controller;
+    if (c == null || !c.value.isInitialized) return;
+    try {
+      final audio = c.getMediaInfo()?.audio;
+      if (audio == null || audio.length < 2) return;
+      final active = c.getActiveAudioTracks();
+      final now = (active != null && active.isNotEmpty) ? active.first : 0;
+      final next = ((now + delta) % audio.length + audio.length) % audio.length;
+      c.setAudioTracks([next]);
+      final ch = audio[next].codec.channels;
+      final lang = audio[next].metadata['language'] ?? audio[next].metadata['title'];
+      setState(() {
+        audioCount = audio.length;
+        audioNote = 'Audio ${next + 1} of ${audio.length}  ·  ${ch == 2 ? 'stereo' : ch == 1 ? 'mono' : '$ch channels'}'
+            '${lang != null && lang.isNotEmpty ? '  ·  $lang' : ''}';
+        _flashInfo();
+      });
+    } catch (_) {}
   }
 
   /// Current stream failed: try the channel's next backup, else show the error.
@@ -149,6 +182,8 @@ class _PlayerState extends State<Player> {
       _zap(-1);
     } else if (k == LogicalKeyboardKey.arrowDown || k == LogicalKeyboardKey.channelDown) {
       _zap(1);
+    } else if (!failed && audioCount > 1 && (k == LogicalKeyboardKey.arrowLeft || k == LogicalKeyboardKey.arrowRight)) {
+      if (e is KeyDownEvent) _cycleAudio(k == LogicalKeyboardKey.arrowRight ? 1 : -1);
     } else if (isSelectKey(k) || k == LogicalKeyboardKey.arrowLeft || k == LogicalKeyboardKey.arrowRight) {
       if (e is KeyDownEvent) {
         if (failed) {
@@ -256,10 +291,16 @@ class _PlayerState extends State<Player> {
                   '${streamIdx > 0 ? '  ·  backup stream ${streamIdx + 1}' : ''}',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 13),
                 ),
+                if (audioNote != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Text(audioNote!, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+                  ),
               ],
             ),
           ),
-          Text('▲ ▼  change channel', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
+          Text('▲ ▼  change channel${audioCount > 1 ? '\n◀ ▶  audio track' : ''}',
+              textAlign: TextAlign.right, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
         ],
       ),
     );

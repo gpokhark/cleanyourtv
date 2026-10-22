@@ -13,6 +13,12 @@ Blocked streams are written to the block list, one URL per line with the reason 
 URL in apps/live-tv/assets/blocked_streams.txt. Run it from a computer on the same network as the TV: a link that
 answers here should answer there, and a geo-blocked one will not.
 
+--speed also measures how fast each live stream delivers video compared with how fast it plays, from this computer, and
+writes a note per stream ("fast", "marginal" or "slow") to apps/live-tv/assets/stream_notes.txt, which the app shows. A
+stream that delivers at about real-time speed or below (ratio 1.0x) freezes whenever the connection hiccups, however
+fast your own internet is. A few streams are fetched at a time so the test itself does not slow them; run it twice at
+different times of day, since servers vary.
+
 --deep also runs ffprobe (needs ffmpeg) on the live ones and lists streams whose audio is MP2-only or missing, which
 some TVs cannot decode (the app plays them anyway when it uses the fvp player).
 
@@ -26,6 +32,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -144,6 +151,41 @@ def probe(item):
         return name, url, (type(e).__name__, False)
 
 
+def media_segments(url):
+    """The (segment url, seconds) pairs of a stream's media playlist, newest last."""
+    status, body = get(url, 60000)
+    base = url
+    if "#EXTINF" not in body:
+        variant = next(urllib.parse.urljoin(base, l.strip()) for l in body.splitlines() if l.strip() and not l.startswith("#"))
+        base = variant
+        status, body = get(variant, 60000)
+    lines = body.splitlines()
+    out = []
+    for i, l in enumerate(lines):
+        m = re.match(r"#EXTINF:([\d.]+)", l)
+        if m and i + 1 < len(lines):
+            out.append((urllib.parse.urljoin(base, lines[i + 1].strip()), float(m.group(1))))
+    return out
+
+
+def speed_of(item):
+    """Return (name, url, ratio or None): seconds of video delivered per second spent downloading it (newest 4 segments)."""
+    name, url = item
+    try:
+        segs = media_segments(url)[-4:]
+        spent = played = 0.0
+        for seg, dur in segs:
+            t = time.time()
+            req = urllib.request.Request(seg, headers=UA)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                r.read()
+            spent += time.time() - t
+            played += dur
+        return name, url, (played / spent if spent > 0 else None)
+    except Exception:
+        return name, url, None
+
+
 def audio_of(url):
     try:
         r = subprocess.run(
@@ -164,6 +206,8 @@ def main():
     ap.add_argument("--skip", default=os.environ.get("IPTV_SKIP", ""), help="words to leave out, as IPTV_SKIP")
     ap.add_argument("--out", default="apps/live-tv/assets/blocked_streams.txt")
     ap.add_argument("--strict", action="store_true", help="also block streams that fail only with a network error or 403")
+    ap.add_argument("--speed", action="store_true", help="also label each live stream fast, marginal or slow")
+    ap.add_argument("--notes", default="apps/live-tv/assets/stream_notes.txt")
     ap.add_argument("--deep", action="store_true", help="also report streams with MP2-only or no audio (needs ffprobe)")
     ap.add_argument("--workers", type=int, default=16)
     a = ap.parse_args()
@@ -194,6 +238,25 @@ def main():
         f.write("\n".join(lines) + "\n")
     print(f"{len(results) - len(failed)} answer, {len(dead)} are dead (blocked), {len(unsure)} unsure (kept: network error or "
           f"403, may work from the TV); block list written to {a.out}")
+
+    if a.speed:
+        with cf.ThreadPoolExecutor(4) as ex:
+            speeds = list(ex.map(speed_of, alive))
+        notes = ["# How fast each stream delivers video (1.0x = exactly as fast as it plays). Written by tools/check-live-channels.py --speed."]
+        counts = {"fast": 0, "marginal": 0, "slow": 0, "unmeasured": 0}
+        for n, u, ratio in sorted(speeds, key=lambda x: (x[2] is None, x[2] or 0)):
+            if ratio is None:
+                label = "unmeasured"
+            else:
+                label = "slow" if ratio < 1.5 else "marginal" if ratio < 3 else "fast"
+            counts[label] += 1
+            notes.append(f"{u}  # {n}: {label} {'' if ratio is None else '%.1fx' % ratio}".rstrip())
+        with open(a.notes, "w", encoding="utf8") as f:
+            f.write("\n".join(notes) + "\n")
+        print("speed: " + ", ".join(f"{k} {v}" for k, v in counts.items()) + f"; notes written to {a.notes}")
+        for n, u, ratio in sorted(speeds, key=lambda x: (x[2] is None, x[2] or 0)):
+            if ratio is not None and ratio < 1.5:
+                print(f"  slow {ratio:.1f}x  {n}")
 
     if a.deep:
         with cf.ThreadPoolExecutor(a.workers) as ex:

@@ -89,8 +89,25 @@ python3 tools/check-live-channels.py --deep       # also lists streams with MP2-
 For each stream it checks that the playlist answers, that its first variant lists segments, and that the newest segment
 is served; a dead channel often still serves a playlist but no video. A definite failure (404 or 410, not a playlist,
 no segments) goes on the block list the app skips. A network error, timeout or 403 is reported as unsure and kept,
-because this computer may simply not reach a server the way the TV does; `--strict` blocks those too. The committed
+because this computer may simply not reach a server the way the TV does; `--strict` blocks those too. With `--speed` it also measures how fast each live stream delivers video compared with how fast it
+plays and labels it fast, marginal or slow in `assets/stream_notes.txt`: a stream at about 1.0x freezes whenever the
+connection hiccups, however fast your internet is. The committed
 block list is empty: run the checker before a build to fill it in, since links go stale within days.
+
+## Testing on the TV
+
+A link that answers on a computer can still fail on the TV. `tools/tv-smoke-test.py` plays every stream of the app on
+the TV, one at a time, and says which really work there:
+
+```bash
+TV_HOST=192.168.1.50 tools/tv-smoke-test.py Movies,Sports     # or "all"; about 12 seconds per stream
+```
+
+It pushes a flag file that puts the app in test mode, starts it, and reads one logged line per stream: whether it
+starts, how many of 8 seconds actually played, stalls, and the audio tracks. The result is OK, SLOW (starts, but stalls
+or falls behind), STALL (starts, hardly plays) or FAIL, and the table is written as CSV. The TV shows the test while it
+runs; closing the app stops it early. The app deletes the flag file as soon as it reads it, so it cannot get stuck in
+test mode.
 
 ## Network use
 
@@ -106,6 +123,10 @@ because many TVs cannot decode MPEG layer 2 (MP2) audio, and some cannot decode 
 decoders a stream whose audio is MP2 only, or AC-3 plus MP2, plays video with no sound; about one Indian channel in
 fourteen is like that. fvp decodes them in software, at a cost of about 10 MB of libraries and about 25 MB of memory while
 playing. Remove the `fvp.registerWith()` line in `lib/main.dart` to go back to the TV's decoders.
+
+While a channel plays, Left and Right switch between its audio tracks when it has more than one (several languages, or
+5.1 plus stereo); the banner shows which one is on ("Audio 2 of 5 · stereo · eng"). The player logs the tracks it sees
+to logcat as `AUDIO <channel>: tracks=[...]`.
 
 A 5.1 track played through a stereo TV can lose the centre channel, where the dialogue is, so music is loud and speech
 cannot be heard. When a stream carries a stereo track as well, the player chooses it. To see what a stream carries:
