@@ -1,3 +1,4 @@
+import 'package:fvp/fvp.dart' as fvp;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -9,6 +10,9 @@ const _perf = bool.fromEnvironment('PERF');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Plays through libmdk (FFmpeg) instead of Android's decoders, so MP2 and 5.1 AC-3 audio the TV cannot decode still
+  // plays. Without this line the app uses the TV's own decoders.
+  fvp.registerWith();
   await LogoCache.init();
   runApp(const MyApp());
   if (_perf) {

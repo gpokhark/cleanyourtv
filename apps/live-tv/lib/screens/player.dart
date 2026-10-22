@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fvp/fvp.dart' show FVPControllerExtensions;
 import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -77,10 +78,29 @@ class _PlayerState extends State<Player> {
       await c.initialize();
       if (gen != _generation) return;
       startTimer?.cancel();
+      _preferStereo(c);
       await c.play();
       if (mounted) setState(_flashInfo);
     } catch (_) {
       if (gen == _generation) _nextStream(gen);
+    }
+  }
+
+  /// A 5.1 track mixed down by a stereo TV can lose the centre channel, where the dialogue is: music is loud and speech
+  /// cannot be heard. When the stream also carries a stereo track (Movies Now HD has AC-3 5.1 plus MP2 stereo), play that.
+  void _preferStereo(VideoPlayerController c) {
+    try {
+      final audio = c.getMediaInfo()?.audio;
+      if (audio == null || audio.length < 2) return;
+      final stereo = audio.indexWhere((a) => a.codec.channels == 2);
+      final active = c.getActiveAudioTracks();
+      debugPrint('AUDIO tracks=${[for (final a in audio) '${a.index}:${a.codec.channels}ch'.toString()]} active=$active -> stereo=$stereo');
+      if (stereo < 0) return;
+      if (active != null && active.length == 1 && active.first == stereo) return;
+      c.setAudioTracks([stereo]);
+      debugPrint('AUDIO now active=${c.getActiveAudioTracks()}');
+    } catch (e) {
+      debugPrint('AUDIO track choice failed: $e');
     }
   }
 

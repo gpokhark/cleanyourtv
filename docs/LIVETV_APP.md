@@ -38,6 +38,7 @@ The channel sources are build settings, passed to `tools/build-live-tv.sh` as en
 |---|---|---|
 | `IPTV_PLAYLISTS` | `countries/in` | Comma-separated playlists. An entry is a path under `https://iptv-org.github.io/iptv/` without `.m3u` (`countries/in`, `languages/mar`, `categories/news`), or a full `http(s)` playlist URL. A path can carry filters after a `?`, see below. Avoid `index`: it lists every channel (11,000+) |
 | `IPTV_GROUPS` | empty | For full-URL playlists only: the `group-title` values to keep, such as `India`. Those lists are grouped by country and cover the world |
+| `IPTV_SKIP` | empty | Words to leave out, matched against each channel's name and link without regard to case. `pluto` drops every Pluto TV channel, for someone who already has that app |
 | `IPTV_MIN_HEIGHT` | `1080` | Lowest stream height kept. `720` also keeps the (720p) streams, which roughly doubles the Indian list |
 
 ```bash
@@ -51,6 +52,7 @@ An iptv-org path can be narrowed with filters after a `?`, joined by `&`:
 |---|---|
 | `country=in` | Keep only channels of that country, going by the id in the list (`NDTV24x7.in@SD` is Indian). Useful for a language many countries broadcast in |
 | `cat=Movies\|Sports` | Keep only those sidebar categories (News, Entertainment, Movies, Music, Sports, Kids, Infotainment, Business, Devotional, Other) |
+| `not=us` | Drop the channels of that country, for example the US ones from a worldwide English sports list |
 | `min=720` | This list's lowest stream height, instead of `IPTV_MIN_HEIGHT` |
 
 For example, Indian English, Hindi and Marathi channels in every category, plus English movie and sports channels
@@ -74,12 +76,40 @@ Behaviour to know about:
 only) that covers the whole world; iptv-org is a larger directory of user-submitted links. For India the two overlap
 heavily, so Free-TV adds a few channels and mostly adds backup links.
 
+## Checking links before you build
+
+Many links in public lists are dead, and some are slow. `tools/check-live-channels.py` checks them from a computer on the
+same network as the TV, using the same `IPTV_*` settings as the build:
+
+```bash
+python3 tools/check-live-channels.py              # writes apps/live-tv/assets/blocked_streams.txt
+python3 tools/check-live-channels.py --deep       # also lists streams with MP2-only or no audio (needs ffprobe)
+```
+
+For each stream it checks that the playlist answers, that its first variant lists segments, and that the newest segment
+is served; a dead channel often still serves a playlist but no video. A definite failure (404 or 410, not a playlist,
+no segments) goes on the block list the app skips. A network error, timeout or 403 is reported as unsure and kept,
+because this computer may simply not reach a server the way the TV does; `--strict` blocks those too. The committed
+block list is empty: run the checker before a build to fill it in, since links go stale within days.
+
 ## Network use
 
 On start it downloads the playlists you chose, plus the iptv-org India index for logos and categories, and then the
 streams you open. Whoever maintains those lists decides which channels appear. It asks only for the INTERNET
 permission and has no analytics or ads. iptv-org and Free-TV both say they hold no video and only link to publicly
 available streams; neither guarantees the rights to a stream, and iptv-org has a copyright-claim form for owners.
+
+## Audio
+
+The app plays through [fvp](https://pub.dev/packages/fvp) (libmdk, built on FFmpeg) instead of Android's own decoders,
+because many TVs cannot decode MPEG layer 2 (MP2) audio, and some cannot decode 5.1 Dolby Digital (AC-3). With Android's
+decoders a stream whose audio is MP2 only, or AC-3 plus MP2, plays video with no sound; about one Indian channel in
+fourteen is like that. fvp decodes them in software, at a cost of about 10 MB of libraries and about 25 MB of memory while
+playing. Remove the `fvp.registerWith()` line in `lib/main.dart` to go back to the TV's decoders.
+
+A 5.1 track played through a stereo TV can lose the centre channel, where the dialogue is, so music is loud and speech
+cannot be heard. When a stream carries a stereo track as well, the player chooses it. To see what a stream carries:
+`ffprobe -show_entries stream=codec_type,codec_name,channels <stream url>`.
 
 ## Memory
 

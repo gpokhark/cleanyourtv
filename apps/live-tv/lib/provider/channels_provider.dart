@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
@@ -29,7 +30,8 @@ class ChannelsProvider {
   /// Free-TV's https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8. Set at build time:
   /// --dart-define=IPTV_PLAYLISTS=countries/in,languages/mar. Avoid "index": it holds every channel. An iptv-org path
   /// can carry filters after a "?": country=in keeps only channels of that country (by the tvg-id, "NDTV24x7.in@SD" is
-  /// Indian), cat=Movies|Sports keeps only those sidebar categories, min=720 sets this list's lowest height. So
+  /// Indian), not=us drops the channels of that country, cat=Movies|Sports keeps only those sidebar categories,
+  /// min=720 sets this list's lowest height. So
   /// "languages/eng?country=in" is Indian English, and "languages/eng?cat=Movies&min=720" is English movie channels
   /// from anywhere.
   static const playlists = String.fromEnvironment('IPTV_PLAYLISTS', defaultValue: 'countries/in');
@@ -37,6 +39,10 @@ class ChannelsProvider {
   /// For playlists given as a full URL, which group-title values to keep, comma separated ("India"); such lists
   /// are grouped by country and cover the whole world. Empty keeps everything. Build setting --dart-define=IPTV_GROUPS=India.
   static const groups = String.fromEnvironment('IPTV_GROUPS');
+
+  /// Channels to leave out, comma separated, each a word matched (ignoring case) against the channel's name and link:
+  /// IPTV_SKIP=pluto drops every Pluto TV channel, for someone who has the Pluto TV app. Build setting.
+  static const skip = String.fromEnvironment('IPTV_SKIP');
 
   /// Lowest stream height kept: 1080 keeps only (1080p) streams, 720 also keeps (720p) ones. Build setting
   /// --dart-define=IPTV_MIN_HEIGHT=720.
@@ -62,6 +68,19 @@ class ChannelsProvider {
     }
   }
 
+  /// Links that tools/check-live-channels.py found dead, from assets/blocked_streams.txt ("URL  # reason" per line).
+  static Future<List<String>> _blockedStreams() async {
+    try {
+      final text = await rootBundle.loadString('assets/blocked_streams.txt');
+      return [
+        for (final line in text.split('\n'))
+          if (line.trim().isNotEmpty && !line.trim().startsWith('#')) line.trim().split(RegExp(r'\s+')).first,
+      ];
+    } catch (_) {
+      return const [];
+    }
+  }
+
   /// Downloads everything in parallel, parses off the UI thread, saves the cache.
   Future<List<Channel>> refresh() async {
     final sources = [
@@ -84,6 +103,7 @@ class ChannelsProvider {
             'name': sources[i].name,
             'full': sources[i].full,
             'country': sources[i].country,
+            'not': sources[i].notCountry,
             'cats': sources[i].cats,
             'min': sources[i].minHeight ?? minHeight,
             'body': responses[i + 1],
@@ -91,6 +111,8 @@ class ChannelsProvider {
       ],
       'groups': groups.split(',').map((g) => g.trim().toLowerCase()).where((g) => g.isNotEmpty).toList(),
     };
+    args['skip'] = skip.split(',').map((t) => t.trim().toLowerCase()).where((t) => t.isNotEmpty).toList();
+    args['blocked'] = await _blockedStreams();
     final json = await compute(_buildChannels, args);
     if (json.isEmpty) throw Exception('No channels found');
 
@@ -108,13 +130,14 @@ class _Source {
   final String url;
   final bool full;
   final String country;
+  final String notCountry;
   final List<String> cats;
   final int? minHeight;
 
-  const _Source(this.name, this.url, this.full, this.country, this.cats, this.minHeight);
+  const _Source(this.name, this.url, this.full, this.country, this.notCountry, this.cats, this.minHeight);
 
   factory _Source.parse(String entry) {
-    if (entry.startsWith('http')) return _Source(entry, entry, true, '', const [], null);
+    if (entry.startsWith('http')) return _Source(entry, entry, true, '', '', const [], null);
     final q = entry.indexOf('?');
     final path = q < 0 ? entry : entry.substring(0, q);
     final params = q < 0 ? <String, String>{} : Uri.splitQueryString(entry.substring(q + 1));
@@ -123,6 +146,7 @@ class _Source {
       '${ChannelsProvider._iptvBase}$path.m3u',
       false,
       (params['country'] ?? '').toLowerCase(),
+      (params['not'] ?? '').toLowerCase(),
       (params['cat'] ?? '').split('|').map((c) => c.trim().toLowerCase()).where((c) => c.isNotEmpty).toList(),
       int.tryParse(params['min'] ?? ''),
     );
@@ -254,12 +278,19 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
     final full = p['full'] as bool;
     final sportsList = !full && (p['name'] as String).toLowerCase().contains('sport');
     final keepGroups = (args['groups'] as List).cast<String>();
+    final skipTerms = (args['skip'] as List).cast<String>();
+    final blocked = (args['blocked'] as List).cast<String>().toSet();
     final country = p['country'] as String;
+    final notCountry = p['not'] as String;
     final cats = (p['cats'] as List).cast<String>();
     for (final e in _entries(p['body'] as String)) {
       if (country.isNotEmpty && _idCountry(e.attr(_tvgId)) != country) continue;
+      if (notCountry.isNotEmpty && _idCountry(e.attr(_tvgId)) == notCountry) continue;
       // The player cannot open a YouTube page; those entries (marked with a circled Y in some lists) are skipped.
       if (e.url.contains('youtube.com') || e.url.contains('youtu.be')) continue;
+      if (blocked.contains(e.url)) continue;
+      final lowerUrl = e.url.toLowerCase(), lowerName = e.name.toLowerCase();
+      if (skipTerms.any((t) => lowerUrl.contains(t) || lowerName.contains(t))) continue;
       if (full && keepGroups.isNotEmpty && !keepGroups.contains(e.attr(_group).toLowerCase())) continue;
       // 1080p only unless IPTV_MIN_HEIGHT says otherwise. iptv-org names carry the height; a list that does not
       // tag it (a full-URL playlist) is kept, since its quality is unknown, not low.

@@ -17,9 +17,11 @@ export JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17}"
 export MSYS_NO_PATHCONV=1
 
 # IPTV_PLAYLISTS (iptv-org paths or full playlist URLs, default countries/in), IPTV_GROUPS (group-titles to keep from
-# full-URL playlists, e.g. India) and IPTV_MIN_HEIGHT (default 1080) pick the channels.
+# full-URL playlists, e.g. India), IPTV_SKIP (words to leave out, e.g. pluto) and IPTV_MIN_HEIGHT (default 1080) pick
+# the channels. tools/check-live-channels.py writes the dead links the app skips (assets/blocked_streams.txt).
 (cd apps/live-tv && flutter build apk --release --target-platform "${TARGET:-android-arm}" --android-skip-build-dependency-validation \
   --dart-define=IPTV_PLAYLISTS="${IPTV_PLAYLISTS:-countries/in}" --dart-define=IPTV_GROUPS="${IPTV_GROUPS:-}" \
+  --dart-define=IPTV_SKIP="${IPTV_SKIP:-}" \
   --dart-define=IPTV_MIN_HEIGHT="${IPTV_MIN_HEIGHT:-1080}")
 APK=apps/live-tv/build/app/outputs/flutter-apk/app-release.apk
 [ -f "$APK" ] || { echo "the build did not produce $APK" >&2; exit 1; }
