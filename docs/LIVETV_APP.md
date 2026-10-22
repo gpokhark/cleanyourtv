@@ -51,7 +51,8 @@ An iptv-org path can be narrowed with filters after a `?`, joined by `&`:
 | Filter | Meaning |
 |---|---|
 | `country=in` | Keep only channels of that country, going by the id in the list (`NDTV24x7.in@SD` is Indian). Useful for a language many countries broadcast in |
-| `cat=Movies\|Sports` | Keep only those sidebar categories (News, Entertainment, Movies, Music, Sports, Kids, Infotainment, Business, Devotional, Other) |
+| `cat=Movies\|Sports` | Keep only those sidebar categories. They are iptv-org's own: News, Entertainment, General, Movies, Classic, Series, Comedy, Music, Sports, Kids, Animation, Family, Documentary, Science, Travel, Culture, Education, Lifestyle, Cooking, Outdoor, Relax, Weather, Business, Religious, Legislative, Public, Interactive, Shop, Auto, Other. A channel goes in the first category iptv-org gives it |
+| `name=discovery\|history` | Keep only channels whose name contains one of these words (without regard to case). Combines with the other filters, so `name=` alone picks channels from any category |
 | `not=us` | Drop the channels of that country, for example the US ones from a worldwide English sports list |
 | `min=720` | This list's lowest stream height, instead of `IPTV_MIN_HEIGHT` |
 
@@ -86,7 +87,7 @@ stays part of the link.
 
 `tools/check-live-channels.py` sends the same headers, so a stream that only works with them is no longer reported as
 down. In the iptv-org Hindi, Marathi and English lists, 105 channels carry such headers, and 12 of them answered only
-with the headers on (measured once; the lists change). The channel list is cached on the TV as `channels_v3.json`, so
+with the headers on (measured once; the lists change). The channel list is cached on the TV as `channels_v4.json`, so
 the first start after an update fetches the lists again.
 
 ## Checking links before you build

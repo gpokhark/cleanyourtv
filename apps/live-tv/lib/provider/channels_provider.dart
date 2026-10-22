@@ -8,17 +8,11 @@ import 'package:path_provider/path_provider.dart';
 
 import '../model/channel.dart';
 
-/// Sidebar order. Categories with no channels are hidden.
+/// Sidebar order: iptv-org's own categories. Categories with no channels are hidden.
 const categoryOrder = [
-  'News',
-  'Entertainment',
-  'Movies',
-  'Music',
-  'Sports',
-  'Kids',
-  'Infotainment',
-  'Business',
-  'Devotional',
+  'News', 'Entertainment', 'General', 'Movies', 'Classic', 'Series', 'Comedy', 'Music', 'Sports', 'Kids',
+  'Animation', 'Family', 'Documentary', 'Science', 'Travel', 'Culture', 'Education', 'Lifestyle', 'Cooking',
+  'Outdoor', 'Relax', 'Weather', 'Business', 'Religious', 'Legislative', 'Public', 'Interactive', 'Shop', 'Auto',
   'Other',
 ];
 
@@ -53,7 +47,7 @@ class ChannelsProvider {
   /// Carries logos and group-titles (categories) for Indian channels.
   static const logoIndexUrl = 'https://iptv-org.github.io/iptv/countries/in.m3u';
 
-  static const _cacheFile = 'channels_v3.json';
+  static const _cacheFile = 'channels_v4.json';
   static const _timeout = Duration(seconds: 20);
 
   /// Last result saved on disk, so the app can show channels instantly on start.
@@ -123,6 +117,7 @@ class ChannelsProvider {
             'country': sources[i].country,
             'not': sources[i].notCountry,
             'cats': sources[i].cats,
+            'names': sources[i].names,
             'min': sources[i].minHeight ?? minHeight,
             'body': responses[i + 1],
           },
@@ -151,12 +146,13 @@ class _Source {
   final String country;
   final String notCountry;
   final List<String> cats;
+  final List<String> names;
   final int? minHeight;
 
-  const _Source(this.name, this.url, this.full, this.country, this.notCountry, this.cats, this.minHeight);
+  const _Source(this.name, this.url, this.full, this.country, this.notCountry, this.cats, this.names, this.minHeight);
 
   factory _Source.parse(String entry) {
-    if (entry.startsWith('http')) return _Source(entry, entry, true, '', '', const [], null);
+    if (entry.startsWith('http')) return _Source(entry, entry, true, '', '', const [], const [], null);
     final q = entry.indexOf('?');
     final path = q < 0 ? entry : entry.substring(0, q);
     final params = q < 0 ? <String, String>{} : Uri.splitQueryString(entry.substring(q + 1));
@@ -167,6 +163,7 @@ class _Source {
       (params['country'] ?? '').toLowerCase(),
       (params['not'] ?? '').toLowerCase(),
       (params['cat'] ?? '').split('|').map((c) => c.trim().toLowerCase()).where((c) => c.isNotEmpty).toList(),
+      (params['name'] ?? '').split('|').map((c) => c.trim().toLowerCase()).where((c) => c.isNotEmpty).toList(),
       int.tryParse(params['min'] ?? ''),
     );
   }
@@ -264,45 +261,14 @@ String _cleanName(String name) => name
     .replaceAll(RegExp('[\u24C8\u24BC\u24CE]'), '')   // circled S, G, Y: not HD, geo-blocked, YouTube
     .trim();
 
+/// iptv-org group-title ("News;Business") -> the sidebar category: its first category, under iptv-org's own name.
 String _category(String group) {
   final first = group.split(';').first.trim().toLowerCase();
-  switch (first) {
-    case 'news':
-    case 'legislative':
-      return 'News';
-    case 'entertainment':
-    case 'general':
-    case 'comedy':
-    case 'series':
-      return 'Entertainment';
-    case 'movies':
-    case 'classic':
-      return 'Movies';
-    case 'music':
-      return 'Music';
-    case 'sports':
-      return 'Sports';
-    case 'kids':
-    case 'animation':
-    case 'family':
-      return 'Kids';
-    case 'documentary':
-    case 'science':
-    case 'travel':
-    case 'culture':
-    case 'education':
-    case 'lifestyle':
-    case 'cooking':
-    case 'outdoor':
-      return 'Infotainment';
-    case 'business':
-      return 'Business';
-    case 'religious':
-      return 'Devotional';
-    default:
-      // A full-URL list names its own groups ("VOD Movies (EN)").
-      return RegExp('movie|film|cinema').hasMatch(first) ? 'Movies' : 'Other';
+  for (final c in categoryOrder) {
+    if (c != 'Other' && c.toLowerCase() == first) return c;
   }
+  // A full-URL list names its own groups ("VOD Movies (EN)").
+  return RegExp('movie|film|cinema').hasMatch(first) ? 'Movies' : 'Other';
 }
 
 List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
@@ -336,6 +302,7 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
     final country = p['country'] as String;
     final notCountry = p['not'] as String;
     final cats = (p['cats'] as List).cast<String>();
+    final names = (p['names'] as List).cast<String>();
     for (final e in _entries(p['body'] as String)) {
       if (country.isNotEmpty && _idCountry(e.attr(_tvgId)) != country) continue;
       if (notCountry.isNotEmpty && _idCountry(e.attr(_tvgId)) == notCountry) continue;
@@ -356,6 +323,7 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
       // A group that is not a category (a country name in a full-URL list) is looked up in the iptv-org index.
       if (category == 'Other') category = _category(groupById[base] ?? groupByName[key] ?? '');
       if (cats.isNotEmpty && !cats.contains(category.toLowerCase())) continue;
+      if (names.isNotEmpty && !names.any(lowerName.contains)) continue;
       var logo = e.attr(_tvgLogo);
       if (!logo.startsWith('http')) logo = logoById[base] ?? logoByName[key] ?? '';
       final existing = byKey['$category|$key'];

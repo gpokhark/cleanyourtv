@@ -115,6 +115,7 @@ def selected(spec, groups, min_height, skip):
         url = f"{IPTV_BASE}{path}.m3u"
         params = dict(urllib.parse.parse_qsl(query))
     cats = [c.strip().lower() for c in params.get("cat", "").split("|") if c.strip()]
+    names = [c.strip().lower() for c in params.get("name", "").split("|") if c.strip()]
     country, not_country = params.get("country", "").lower(), params.get("not", "").lower()
     lowest = int(params["min"]) if params.get("min", "").isdigit() else min_height
     try:
@@ -126,6 +127,8 @@ def selected(spec, groups, min_height, skip):
         if "youtube.com" in link or "youtu.be" in link:
             continue
         if any(t in link.lower() or t in name_of(info).lower() for t in skip):
+            continue
+        if names and not any(t in name_of(info).lower() for t in names):
             continue
         if full and groups and attr(info, "group-title").lower() not in groups:
             continue
