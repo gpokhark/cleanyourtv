@@ -130,8 +130,10 @@ While a channel plays, Left and Right switch between its audio tracks when it ha
 5.1 plus stereo); the banner shows which one is on ("Audio 2 of 5 · stereo · eng"). The player logs the tracks it sees
 to logcat as `AUDIO <channel>: tracks=[...]`.
 
-A 5.1 track played through a stereo TV can lose the centre channel, where the dialogue is, so music is loud and speech
-cannot be heard. When a stream carries a stereo track as well, the player chooses it. To see what a stream carries:
+Some streams carry a surround track and a stereo track that are not the same mix. On Movies Now HD, for example, the
+AC-3 5.1 track has silent centre and surround channels and quiet front channels, while the MP2 stereo track is about
+6 dB louder; with the 5.1 track playing, music was heard but speech was not. When a stream also carries a stereo track,
+the player chooses it, and Left and Right switch back. To see what a stream carries:
 `ffprobe -show_entries stream=codec_type,codec_name,channels <stream url>`.
 
 ## Memory

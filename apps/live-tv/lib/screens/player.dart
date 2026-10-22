@@ -96,8 +96,9 @@ class _PlayerState extends State<Player> {
     }
   }
 
-  /// A 5.1 track mixed down by a stereo TV can lose the centre channel, where the dialogue is: music is loud and speech
-  /// cannot be heard. When the stream also carries a stereo track (Movies Now HD has AC-3 5.1 plus MP2 stereo), play that.
+  /// A stream can carry a 5.1 track and a stereo track that are different mixes: Movies Now HD's 5.1 track has silent centre
+  /// and surround channels and is 6 dB quieter, and with it playing the music is heard but speech is not. When the stream
+  /// also carries a stereo track, play that one; Left and Right switch.
   void _preferStereo(VideoPlayerController c) {
     try {
       final audio = c.getMediaInfo()?.audio;
