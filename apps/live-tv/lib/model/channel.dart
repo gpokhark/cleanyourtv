@@ -10,6 +10,9 @@ class Channel {
   /// First URL is the main stream; the rest are backups tried when it fails.
   final List<String> streamUrls;
 
+  /// Request headers a stream needs (a Referer or User-Agent), by stream URL; most streams need none.
+  final Map<String, Map<String, String>> headers;
+
   Channel({
     required this.name,
     required this.logoUrl,
@@ -17,7 +20,10 @@ class Channel {
     required this.streamUrls,
     this.tvgId = '',
     this.note = '',
+    this.headers = const {},
   });
+
+  Map<String, String> headersFor(String url) => headers[url] ?? const {};
 
   bool get hasLogo => logoUrl.startsWith('http');
 
@@ -28,6 +34,7 @@ class Channel {
         'i': tvgId,
         'w': note,
         's': streamUrls,
+        if (headers.isNotEmpty) 'h': headers,
       };
 
   factory Channel.fromJson(Map<String, dynamic> j) => Channel(
@@ -37,5 +44,7 @@ class Channel {
         tvgId: j['i'] as String? ?? '',
         note: j['w'] as String? ?? '',
         streamUrls: (j['s'] as List).cast<String>(),
+        headers: ((j['h'] as Map?) ?? const {}).map(
+            (url, h) => MapEntry(url as String, (h as Map).map((k, v) => MapEntry(k as String, v as String)))),
       );
 }

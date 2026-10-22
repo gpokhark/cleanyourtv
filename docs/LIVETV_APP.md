@@ -76,6 +76,19 @@ Behaviour to know about:
 only) that covers the whole world; iptv-org is a larger directory of user-submitted links. For India the two overlap
 heavily, so Free-TV adds a few channels and mostly adds backup links.
 
+## Streams that need a Referer or User-Agent
+
+Some playlist entries only play when the request carries a `Referer` or a `User-Agent`. The app reads them the way the
+iptv-org lists write them, from `#EXTVLCOPT:http-referrer=` and `#EXTVLCOPT:http-user-agent=` lines before the link, or
+from a suffix on the link (`https://host/stream.m3u8|Referer=https://site/&User-Agent=...`), and sends them with every
+request for that stream, including the backup links. Other headers are ignored. A `|` in a link that names none of these
+stays part of the link.
+
+`tools/check-live-channels.py` sends the same headers, so a stream that only works with them is no longer reported as
+down. In the iptv-org Hindi, Marathi and English lists, 105 channels carry such headers, and 12 of them answered only
+with the headers on (measured once; the lists change). The channel list is cached on the TV as `channels_v3.json`, so
+the first start after an update fetches the lists again.
+
 ## Checking links before you build
 
 Many links in public lists are dead, and some are slow. `tools/check-live-channels.py` checks them from a computer on the

@@ -109,7 +109,7 @@ class _SmokeScreenState extends State<SmokeScreen> {
 
   Future<String> _test(Channel ch, int si, int n, int total) async {
     final url = ch.streamUrls[si];
-    final c = VideoPlayerController.networkUrl(Uri.parse(url));
+    final c = VideoPlayerController.networkUrl(Uri.parse(url), httpHeaders: ch.headersFor(url));
     final sw = Stopwatch()..start();
     var result = 'FAIL', initMs = 0, stalls = 0, bufMs = 0;
     var played = 0.0;

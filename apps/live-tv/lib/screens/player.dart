@@ -71,7 +71,8 @@ class _PlayerState extends State<Player> {
     setState(() {});
     old?.dispose();
 
-    final c = VideoPlayerController.networkUrl(Uri.parse(channel.streamUrls[streamIdx]));
+    final c = VideoPlayerController.networkUrl(Uri.parse(channel.streamUrls[streamIdx]),
+        httpHeaders: channel.headersFor(channel.streamUrls[streamIdx]));
     controller = c;
     startTimer?.cancel();
     startTimer = Timer(_startTimeout, () {

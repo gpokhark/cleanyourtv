@@ -42,22 +42,51 @@ UA = {"User-Agent": "Mozilla/5.0"}
 TIMEOUT = 10
 
 
-def get(url, limit=None):
-    req = urllib.request.Request(url, headers=UA)
+# Request headers some streams need, by stream url: a Referer or User-Agent from "#EXTVLCOPT:http-referrer=" and
+# "#EXTVLCOPT:http-user-agent=" lines, or a "|Referer=...&User-Agent=..." suffix, as the app reads them.
+HEADERS = {}
+_OPTS = {"http-referrer": "Referer", "http-referer": "Referer", "http-user-agent": "User-Agent"}
+_PIPE = {"referer": "Referer", "referrer": "Referer", "user-agent": "User-Agent"}
+
+
+def split_headers(line, opts):
+    """("url|Referer=x&User-Agent=y", opts) -> ("url", opts + those headers); a "|" that names no header stays in the url."""
+    link, bar, rest = line.partition("|")
+    if not bar:
+        return line, opts
+    found = {}
+    for pair in rest.split("&"):
+        key, _, value = pair.partition("=")
+        name = _PIPE.get(key.strip().lower())
+        if name and value:
+            found[name] = urllib.parse.unquote(value)
+    return (link, {**opts, **found}) if found else (line, opts)
+
+
+def get(url, limit=None, headers=None):
+    req = urllib.request.Request(url, headers={**UA, **(headers or {})})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
         data = r.read(limit) if limit else r.read()
         return r.status, data.decode("utf8", "ignore")
 
 
 def parse_m3u(text):
-    out, info = [], None
+    out, info, opts = [], None, {}
     for raw in text.splitlines():
         line = raw.strip()
         if line.startswith("#EXTINF"):
-            info = line
+            info, opts = line, {}
+        elif line.startswith("#EXTVLCOPT:") and info:
+            key, _, value = line[len("#EXTVLCOPT:"):].partition("=")
+            name = _OPTS.get(key.strip().lower())
+            if name and value.strip():
+                opts[name] = value.strip()
         elif line and not line.startswith("#") and info:
-            out.append((info, line))
-            info = None
+            link, opts = split_headers(line, opts)
+            if opts:
+                HEADERS[link] = opts
+            out.append((info, link))
+            info, opts = None, {}
     return out
 
 
@@ -119,8 +148,9 @@ def selected(spec, groups, min_height, skip):
 def probe(item):
     """Return (name, url, None) when the stream answers, else (name, url, (reason, definite))."""
     name, url = item
+    hdr = HEADERS.get(url)
     try:
-        status, body = get(url, 20000)
+        status, body = get(url, 20000, hdr)
         if status != 200 or "#EXTM3U" not in body[:200]:
             return name, url, (f"not a playlist (status {status})", True)
         base = url
@@ -133,14 +163,14 @@ def probe(item):
         if variant is None:
             return name, url, ("empty playlist", True)
         if "#EXTINF" not in body:
-            status, body = get(variant, 40000)
+            status, body = get(variant, 40000, hdr)
             if status != 200 or "#EXTINF" not in body:
                 return name, url, ("variant playlist has no segments", True)
             base = variant
         segments = [urllib.parse.urljoin(base, l.strip()) for l in body.splitlines() if l.strip() and not l.startswith("#")]
         if not segments:
             return name, url, ("no segments", True)
-        req = urllib.request.Request(segments[-1], headers={**UA, "Range": "bytes=0-2047"})
+        req = urllib.request.Request(segments[-1], headers={**UA, **(hdr or {}), "Range": "bytes=0-2047"})
         with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
             if not r.read(1024):
                 return name, url, ("segment is empty", True)
@@ -153,12 +183,13 @@ def probe(item):
 
 def media_segments(url):
     """The (segment url, seconds) pairs of a stream's media playlist, newest last."""
-    status, body = get(url, 60000)
+    hdr = HEADERS.get(url)
+    status, body = get(url, 60000, hdr)
     base = url
     if "#EXTINF" not in body:
         variant = next(urllib.parse.urljoin(base, l.strip()) for l in body.splitlines() if l.strip() and not l.startswith("#"))
         base = variant
-        status, body = get(variant, 60000)
+        status, body = get(variant, 60000, hdr)
     lines = body.splitlines()
     out = []
     for i, l in enumerate(lines):
@@ -176,7 +207,7 @@ def speed_of(item):
         spent = played = 0.0
         for seg, dur in segs:
             t = time.time()
-            req = urllib.request.Request(seg, headers=UA)
+            req = urllib.request.Request(seg, headers={**UA, **(HEADERS.get(url) or {})})
             with urllib.request.urlopen(req, timeout=30) as r:
                 r.read()
             spent += time.time() - t
@@ -187,9 +218,11 @@ def speed_of(item):
 
 
 def audio_of(url):
+    hdr = {**UA, **(HEADERS.get(url) or {})}
+    extra = [a for k, v in hdr.items() if k != "User-Agent" for a in ("-headers", f"{k}: {v}\r\n")]
     try:
         r = subprocess.run(
-            ["ffprobe", "-v", "quiet", "-user_agent", "Mozilla/5.0", "-rw_timeout", "12000000", "-analyzeduration", "5000000",
+            ["ffprobe", "-v", "quiet", "-user_agent", hdr["User-Agent"], *extra, "-rw_timeout", "12000000", "-analyzeduration", "5000000",
              "-probesize", "5000000", "-show_entries", "stream=codec_type,codec_name", "-of", "compact", url],
             capture_output=True, text=True, timeout=30)
         return sorted({re.search(r"codec_name=(\w+)", l).group(1) for l in r.stdout.splitlines()

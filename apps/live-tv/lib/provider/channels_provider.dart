@@ -53,7 +53,7 @@ class ChannelsProvider {
   /// Carries logos and group-titles (categories) for Indian channels.
   static const logoIndexUrl = 'https://iptv-org.github.io/iptv/countries/in.m3u';
 
-  static const _cacheFile = 'channels_v2.json';
+  static const _cacheFile = 'channels_v3.json';
   static const _timeout = Duration(seconds: 20);
 
   /// Last result saved on disk, so the app can show channels instantly on start.
@@ -186,22 +186,55 @@ final _group = RegExp(r'group-title="([^"]*)"');
 class _Entry {
   final String info;
   final String url;
-  _Entry(this.info, this.url);
+
+  /// A Referer or User-Agent the stream needs: from "#EXTVLCOPT:http-referrer=" / "http-user-agent=" lines, or a
+  /// "|Referer=...&User-Agent=..." suffix on the URL (already cut off [url]).
+  final Map<String, String> headers;
+  _Entry(this.info, this.url, [this.headers = const {}]);
 
   String attr(RegExp r) => r.firstMatch(info)?.group(1) ?? '';
   String get name => info.substring(info.lastIndexOf(',') + 1).trim();
 }
 
+const _optHeaders = {'http-referrer': 'Referer', 'http-referer': 'Referer', 'http-user-agent': 'User-Agent'};
+const _pipeHeaders = {'referer': 'Referer', 'referrer': 'Referer', 'user-agent': 'User-Agent'};
+
+/// "https://x/a.m3u8|Referer=..&User-Agent=.." -> the URL and the headers; a "|" that names no header stays in the URL.
+(String, Map<String, String>) _splitHeaders(String line, Map<String, String> opts) {
+  final bar = line.indexOf('|');
+  if (bar < 0) return (line, opts);
+  final found = <String, String>{};
+  for (final pair in line.substring(bar + 1).split('&')) {
+    final eq = pair.indexOf('=');
+    if (eq < 0) continue;
+    final name = _pipeHeaders[pair.substring(0, eq).trim().toLowerCase()];
+    final value = Uri.decodeComponent(pair.substring(eq + 1));
+    if (name != null && value.isNotEmpty) found[name] = value;
+  }
+  return found.isEmpty ? (line, opts) : (line.substring(0, bar), {...opts, ...found});
+}
+
 List<_Entry> _entries(String body) {
   final out = <_Entry>[];
   String? info;
+  var opts = <String, String>{};
   for (final raw in body.split('\n')) {
     final line = raw.trim();
     if (line.startsWith('#EXTINF:')) {
       info = line;
+      opts = {};
+    } else if (line.startsWith('#EXTVLCOPT:') && info != null) {
+      final eq = line.indexOf('=');
+      if (eq > 0) {
+        final name = _optHeaders[line.substring('#EXTVLCOPT:'.length, eq).trim().toLowerCase()];
+        final value = line.substring(eq + 1).trim();
+        if (name != null && value.isNotEmpty) opts[name] = value;
+      }
     } else if (line.isNotEmpty && !line.startsWith('#') && info != null) {
-      out.add(_Entry(info, line));
+      final (url, headers) = _splitHeaders(line, opts);
+      out.add(_Entry(info, url, headers));
       info = null;
+      opts = {};
     }
   }
   return out;
@@ -329,6 +362,7 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
       if (existing != null) {
         final urls = existing['s'] as List<String>;
         if (!urls.contains(e.url)) urls.add(e.url);
+        if (e.headers.isNotEmpty) (existing['h'] as Map<String, Map<String, String>>)[e.url] = e.headers;
         continue;
       }
       byKey['$category|$key'] = {
@@ -337,6 +371,7 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
         'c': category,
         'i': id,
         's': <String>[e.url],
+        'h': <String, Map<String, String>>{if (e.headers.isNotEmpty) e.url: e.headers},
       };
     }
   }
