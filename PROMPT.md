@@ -41,7 +41,9 @@ Back up first
 - When you finish, close network ADB instead of leaving it open: switch USB debugging and
   Network/ADB debugging off on the TV, revoke the USB debugging authorisations, reboot, and check
   that `nc -vz <tv ip> 5555` fails. Port 5555 is plaintext, and on firmware with `ro.adb.secure=0`
-  any device on the LAN can get a shell.
+  any device on the LAN can get a shell. The one exception: if I choose `memory_adb` (docs/MEMORY.md), the launcher
+  closes apps through the TV's own adb and needs USB debugging to stay on. Explain that trade-off, ask me, and
+  leave it on only if I say so.
 
 Debloat
 - List installed packages and sort them into: manufacturer telemetry/analytics, manufacturer content

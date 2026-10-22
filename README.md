@@ -61,6 +61,19 @@ You need a computer on the same Wi-Fi as the TV and a coding assistant with shel
 The assistant backs up, debloats, builds and installs the launcher, and checks each step with
 screenshots pulled from the TV. With this repo as context it takes about fifteen minutes.
 
+### Already cloned the repo?
+
+Tell your assistant to read `CLAUDE.md` and `PROMPT.md` first, then it can skip writing tools from scratch:
+
+1. `python3 -m venv tools/venv && tools/venv/bin/pip install -r tools/requirements.txt`: the ADB client the scripts use.
+2. `TV_HOST=<tv ip> tools/venv/bin/python -I tools/tv.py --probe`: checks the connection and the Android version.
+3. `TV_HOST=<tv ip> launcher/build-and-install.sh`: builds and installs the launcher (needs JDK 17 and the Android
+   command-line tools, see below). Back up and debloat first, as `PROMPT.md` describes.
+4. `TV_HOST=<tv ip> tools/theme.sh <folder with your config.json>`: pushes your choices without a rebuild.
+5. Keep everything about your own TV (its address, backups, theme, notes) in a git-ignored `my-tv/` folder, and run
+   `tools/check-privacy.py --install-hook` once so each commit is scanned for IP addresses, MAC addresses, keys, emails and
+   the like before it can be pushed.
+
 ## What you get
 
 - **A pitch-black home** with a dock of your four favourite apps in a rounded band, where Apple TV puts it.
@@ -231,6 +244,11 @@ the install script finds `~/Android/Sdk` and the `java` on your PATH.
   Russian includes the module-card approval and management screens and the VPN-off badge.
 - **Safe mode**: three launcher crashes in five minutes switch the theme and optional features off until you push a fixed theme or the crashes age out. It cannot restore the stock launcher; see [`docs/WATCHDOG.md`](docs/WATCHDOG.md).
 - **Theme styles**: the default dark look, or `abyss` (near-white accent, frosted translucent surfaces, rounder corners) with `theme_style`. See [`docs/THEMES.md`](docs/THEMES.md).
+- **Close apps from the Memory pill** (`memory_adb`, off by default): for TVs whose firmware ignores the normal request, Close all
+  and auto-trim stop apps through the TV's own adb, limited to one fixed command. See [`docs/MEMORY.md`](docs/MEMORY.md).
+- **Live TV app** (optional, `apps/live-tv`): a separate Flutter player for free public channels from iptv-org and other M3U
+  lists, with a link checker, speed labels and an on-TV test mode. See [`docs/LIVETV_APP.md`](docs/LIVETV_APP.md).
+- **Privacy check**: `tools/check-privacy.py` scans your staged changes for personal or device data before you commit.
 - **Module cards** let any TV app declare its own tile (label, caption, glow). The launcher asks you once per app, Keep hidden by default, and remembers the answer for that app's signing key and card name. Hold OK on Settings and choose Module cards to change your mind. How to make one: [`docs/modules.md`](docs/modules.md); the contract: [`docs/specs/card.md`](docs/specs/card.md).
 - **Clock screensaver**: a drifting clock over the glow, so nothing burns in. Pick "Clock" in the TV's screensaver settings, or over ADB:
   `tools/tv.py 'settings put secure screensaver_components com.gathin.tvhome/.ClockDream; settings put secure screensaver_enabled 1'`

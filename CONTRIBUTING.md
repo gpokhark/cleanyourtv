@@ -72,3 +72,10 @@ restyle, a platform port, anything with its own background services or network a
 - Be kind in reviews. Most contributors here are doing this for their parents.
 
 By contributing you agree your work is released under the repo's MIT licence.
+
+## Before you commit
+
+This repo is public and its history is permanent. Keep everything about your own TV (its IP address, Wi-Fi name, MAC
+address, serial or android_id, your coordinates, keys, backups) in a git-ignored folder such as `my-tv/`, and run
+`tools/check-privacy.py` on your staged changes. `tools/check-privacy.py --install-hook` does it before every commit.
+Use GitHub's private noreply address as your commit email if you do not want your own on every commit.

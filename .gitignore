@@ -7,6 +7,10 @@ launcher/app/build/
 launcher/local.properties
 # your own TV's dumps (serial, android_id, device names) stay local
 backup/
+
+# Per-TV working folders: your TV's address, backups, theme with your coordinates, notes, keys. Never commit these.
+my-tv/
+my-firetv/
 .DS_Store
 
 # API keys (never commit)
