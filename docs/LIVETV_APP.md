@@ -105,6 +105,14 @@ the TV, one at a time, and says which really work there:
 TV_HOST=192.168.1.50 tools/tv-smoke-test.py Movies,Sports     # or "all"; about 12 seconds per stream
 ```
 
+Testing everything takes one to two hours. The checker can instead save the links a computer could not judge
+(`--unsure-out FILE`), and the test can play only those plus the ones the speed check labelled slow:
+
+```bash
+python3 tools/check-live-channels.py --speed --unsure-out unsure.txt
+TV_HOST=192.168.1.50 tools/tv-smoke-test.py --unsure unsure.txt --slow apps/live-tv/assets/stream_notes.txt
+```
+
 It pushes a flag file that puts the app in test mode, starts it, and reads one logged line per stream: whether it
 starts, how many of 8 seconds actually played, stalls, and the audio tracks. The result is OK, SLOW (starts, but stalls
 or falls behind), STALL (starts, hardly plays) or FAIL, and the table is written as CSV. The TV shows the test while it

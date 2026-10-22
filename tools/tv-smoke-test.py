@@ -7,7 +7,11 @@ audio tracks it has. A link that answers on a computer can still fail on the TV 
 the real check. A run takes about 12 seconds per stream.
 
 Usage: TV_HOST=192.168.1.50 tools/tv-smoke-test.py [categories] [--out FILE] [--max-minutes N]
+       TV_HOST=192.168.1.50 tools/tv-smoke-test.py --targeted
   categories   "all" (default) or a comma-separated list such as "Movies,Sports"
+  --unsure F   test only the links in file F (the checker's --unsure-out file), the ones a computer could not judge
+  --slow F     also test the links labelled slow or marginal in file F (the checker's --speed notes)
+  --targeted   --unsure my-tv/live-tv-unsure.txt --slow my-tv/live-tv-notes.txt: about a hundred streams, not all of them
   --out FILE   write the results as CSV (default my-tv/live-tv-smoke.csv if my-tv exists, else live-tv-smoke.csv)
 The TV screen shows the test while it runs; close the app on the TV to stop early. Results so far are still written.
 """
@@ -16,6 +20,7 @@ import csv
 import os
 import subprocess
 import sys
+import tempfile
 import time
 
 PKG = "com.nk.live_tv"
@@ -52,14 +57,45 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("categories", nargs="?", default="all")
     ap.add_argument("--out")
+    ap.add_argument("--unsure", metavar="FILE")
+    ap.add_argument("--slow", metavar="FILE")
+    ap.add_argument("--targeted", action="store_true")
     ap.add_argument("--max-minutes", type=int, default=150)
     a = ap.parse_args()
     if not os.environ.get("TV_HOST"):
         sys.exit("set TV_HOST to the TV's IP address")
+    if a.targeted:
+        a.unsure = a.unsure or os.path.join(ROOT, "my-tv", "live-tv-unsure.txt")
+        a.slow = a.slow or os.path.join(ROOT, "my-tv", "live-tv-notes.txt")
+    links = None
+    if a.unsure or a.slow:
+        links = []
+        for path, want in ((a.unsure, None), (a.slow, (": slow", ": marginal"))):
+            if not path:
+                continue
+            for line in open(path, encoding="utf8"):
+                line = line.strip()
+                if not line or line.startswith("#") or (want and not any(w in line for w in want)):
+                    continue
+                url = line.split()[0]
+                if url not in links:
+                    links.append(url)
+        if not links:
+            sys.exit("no links to test in the files given")
+        a.categories = f"{len(links)} links"
     out = a.out or ("my-tv/live-tv-smoke.csv" if os.path.isdir(os.path.join(ROOT, "my-tv")) else "live-tv-smoke.csv")
 
-    tv(f"mkdir -p {FILES}; echo '{a.categories}' > {FILES}/smoke; logcat -c; am force-stop {PKG}; "
-       f"am start -n {PKG}/.MainActivity")
+    if links is None:
+        tv(f"mkdir -p {FILES}; echo '{a.categories}' > {FILES}/smoke")
+    else:
+        with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False) as f:
+            f.write("urls\n" + "\n".join(links) + "\n")
+            tmp = f.name
+        tv(f"mkdir -p {FILES}")
+        subprocess.run([PY, "-I", os.path.join(ROOT, "tools", "tv.py"), "--push", tmp, f"{FILES}/smoke"], check=True,
+                       capture_output=True, env=os.environ)
+        os.remove(tmp)
+    tv(f"logcat -c; am force-stop {PKG}; am start -n {PKG}/.MainActivity")
     print(f"test started for: {a.categories}", file=sys.stderr)
 
     rows, done, last_change, seen = {}, None, time.time(), 0

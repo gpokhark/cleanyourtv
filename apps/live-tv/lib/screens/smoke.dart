@@ -12,7 +12,8 @@ import '../model/channel.dart';
 import '../provider/channels_provider.dart';
 
 /// Test mode, started from a computer with tools/tv-smoke-test.py: a file named "smoke" in the app's external files
-/// folder holds a comma-separated list of categories to test ("Movies,Sports"), or "all". The file is deleted as soon
+/// folder holds a comma-separated list of categories to test ("Movies,Sports"), or "all", or the word "urls" on the first
+/// line followed by one stream link per line to test only those. The file is deleted as soon
 /// as it is read, so a crash cannot leave the app stuck in test mode. Returns the request, or null for a normal start.
 Future<String?> smokeRequest() async {
   try {
@@ -47,6 +48,12 @@ class _SmokeScreenState extends State<SmokeScreen> {
   VideoPlayerController? controller;
   String status = 'Loading channels ...';
 
+  /// The links to test when the request is a list of them, else null.
+  late final Set<String>? _links = () {
+    final lines = widget.request.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+    return lines.isNotEmpty && lines.first == 'urls' ? lines.skip(1).toSet() : null;
+  }();
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +75,7 @@ class _SmokeScreenState extends State<SmokeScreen> {
     } catch (_) {
       all = await provider.loadCached() ?? const [];
     }
+    if (_links != null) return all;
     final want = widget.request.split(',').map((c) => c.trim().toLowerCase()).where((c) => c.isNotEmpty).toSet();
     if (want.contains('all')) return all;
     return [for (final c in all) if (want.contains(c.category.toLowerCase())) c];
@@ -77,7 +85,8 @@ class _SmokeScreenState extends State<SmokeScreen> {
     final channels = await _channels();
     final streams = [
       for (final c in channels)
-        for (var i = 0; i < c.streamUrls.length; i++) (c, i),
+        for (var i = 0; i < c.streamUrls.length; i++)
+          if (_links == null || _links.contains(c.streamUrls[i])) (c, i),
     ];
     var ok = 0, slow = 0, bad = 0;
     for (var n = 0; n < streams.length; n++) {

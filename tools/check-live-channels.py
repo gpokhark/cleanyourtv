@@ -207,6 +207,7 @@ def main():
     ap.add_argument("--out", default="apps/live-tv/assets/blocked_streams.txt")
     ap.add_argument("--strict", action="store_true", help="also block streams that fail only with a network error or 403")
     ap.add_argument("--speed", action="store_true", help="also label each live stream fast, marginal or slow")
+    ap.add_argument("--unsure-out", help="also write the links that were unsure (not blocked) to this file, for tools/tv-smoke-test.py")
     ap.add_argument("--notes", default="apps/live-tv/assets/stream_notes.txt")
     ap.add_argument("--deep", action="store_true", help="also report streams with MP2-only or no audio (needs ffprobe)")
     ap.add_argument("--workers", type=int, default=16)
@@ -236,6 +237,10 @@ def main():
     os.makedirs(os.path.dirname(a.out) or ".", exist_ok=True)
     with open(a.out, "w", encoding="utf8") as f:
         f.write("\n".join(lines) + "\n")
+    if a.unsure_out:
+        with open(a.unsure_out, "w", encoding="utf8") as f:
+            f.write("# Links this computer could not judge. tools/tv-smoke-test.py --unsure tests them on the TV.\n")
+            f.writelines(f"{u}  # {n}: {r}\n" for n, u, r in sorted(unsure, key=lambda x: x[0].lower()))
     print(f"{len(results) - len(failed)} answer, {len(dead)} are dead (blocked), {len(unsure)} unsure (kept: network error or "
           f"403, may work from the TV); block list written to {a.out}")
 
