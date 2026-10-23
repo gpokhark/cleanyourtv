@@ -8,7 +8,6 @@
   <a href="https://github.com/Gathin23/cleanyourtv/network/members"><img src="https://img.shields.io/github/forks/Gathin23/cleanyourtv?style=flat&cacheSeconds=1800&color=cfffcf&labelColor=15181e" alt="Forks"></a>
   <a href="https://github.com/Gathin23/cleanyourtv/graphs/contributors"><img src="https://img.shields.io/github/contributors/Gathin23/cleanyourtv?style=flat&cacheSeconds=1800&color=cfffcf&labelColor=15181e" alt="Contributors"></a>
   <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/README-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-cfffcf?style=flat&labelColor=15181e" alt="简体中文"></a>
-  <a href="README.vi.md"><img src="https://img.shields.io/badge/README-Ti%E1%BA%BFng%20Vi%E1%BB%87t-cfffcf?style=flat&labelColor=15181e" alt="Tiếng Việt"></a>
   <a href="README.ja.md"><img src="https://img.shields.io/badge/README-%E6%97%A5%E6%9C%AC%E8%AA%9E-cfffcf?style=flat&labelColor=15181e" alt="日本語"></a>
   <a href="https://buymeacoffee.com/gathint"><img src="https://img.shields.io/badge/support-%E2%9D%A4-ff5e8a?style=flat&labelColor=15181e" alt="Support, buy me a coffee"></a>
   <a href="https://www.producthunt.com/products/cleanyourtv"><img src="https://img.shields.io/badge/Product%20Hunt-upvote%20%E2%96%B2-da552f?style=flat&logo=producthunt&logoColor=white&labelColor=15181e" alt="CleanYourTV on Product Hunt"></a>
@@ -416,6 +415,12 @@ tools/theme.sh themes/aurora                                 # push a theme; --r
 | [`tools/flamechart.py`](tools/flamechart.py) | Draws a before/after flame chart from those traces, for a pull request: one lane per thread on a shared time scale, the work a change targets in magenta with its total. Optional, like the trace tools. [Guide](tools/flamechart.md). |
 | [`tools/screendiff.py`](tools/screendiff.py) | Compares a before and an after screenshot pixel by pixel, leaving out the clock or anything you mask, and writes the pair with your Wi-Fi name blurred. Optional, like the trace tools. [Guide](tools/screendiff.md). |
 | [`tools/race_calendar.py`](tools/race_calendar.py) | Writes this season's F1 calendar into a theme for race-weekend mode, from the free Jolpica API. |
+| [`tools/check.sh`](tools/check.sh) | The same drift check as a shell script: lists packages from a debloat file that are enabled again, and says which app is Home; `--fix` disables them again. |
+| [`tools/push-key.sh`](tools/push-key.sh) | Copies a search API key from `secrets/` to the launcher's private folder on the TV for the Search pill; prints no key material. |
+| [`tools/push-shows.sh`](tools/push-shows.sh), [`pluto-catalog.py`](tools/pluto-catalog.py) | The Shows screen's catalogues: `pluto-catalog.py` writes a series' season and episode list from Pluto TV's public catalogue, `push-shows.sh` puts the files on the TV (progress is kept). See [`docs/SHOWS.md`](docs/SHOWS.md). |
+| [`tools/build-live-tv.sh`](tools/build-live-tv.sh) | Builds and installs the optional Live TV app (`apps/live-tv`); `BUILD_ONLY=1` builds the APK and stops. See [`docs/LIVETV_APP.md`](docs/LIVETV_APP.md). |
+| [`tools/check-live-channels.py`](tools/check-live-channels.py), [`check-epg-coverage.py`](tools/check-epg-coverage.py), [`tv-smoke-test.py`](tools/tv-smoke-test.py) | For the Live TV app: test the links of the playlists you chose (dead ones, and how fast the live ones deliver video), see how many channels a programme guide covers, and play every stream on the TV to see which really work there. |
+| [`tools/check-privacy.py`](tools/check-privacy.py) | Scans staged changes for IP addresses, MAC addresses, serials and keys before a commit (`--install-hook` runs it on every commit). |
 | [`launcher/build-and-install.sh`](launcher/build-and-install.sh) | Builds a shrunk release (about 474 KB), installs it, switches Home, and rolls back if Home does not land on it. |
 
 The scripts never leave the TV without a Home app: they only disable a stock launcher they recognise,

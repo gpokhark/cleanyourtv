@@ -44,6 +44,20 @@ A new key needs one there in the same pull request.
 | `search_region` | string | Country whose catalogue is checked, e.g. `US` |
 | `search_max_results` | 1 to 20 | Titles checked per search; each costs one request |
 | `my_services` | list of `Label\|package\|ids` | Services you can watch at no extra cost |
+| `show_live` | true / false | The Live pill: your favourite free live channels ([`docs/LIVE.md`](../docs/LIVE.md)) |
+| `live_channels` | list of `Name\|package\|link` | The channels the Live pill offers; the link opens that channel in the app |
+| `show_memory` | true / false | The Memory pill: apps used recently, to close the ones you pick, or all ([`docs/MEMORY.md`](../docs/MEMORY.md)) |
+| `memory_protect` | list of package names | Apps the Memory screen never lists |
+| `memory_adb` | true / false | Close apps through the TV's own adb (`am force-stop`), for firmware that ignores the normal request; needs USB debugging on (`false` by default) |
+| `auto_trim` | true / false | Close idle apps by itself when Home is pressed and free memory is low (`false` by default) |
+| `auto_trim_below_mb` | integer | "Low" for `auto_trim`: free memory in MB below which it runs (500 by default) |
+| `recent_apps` | 0 to 12 | The apps used most recently, in the grid right after the dock, newest first; 0 is off |
+| `show_shows` | true / false | The Shows tile: progress through series ([`docs/SHOWS.md`](../docs/SHOWS.md)) |
+| `youtube_package` | string | The YouTube app to follow for "Last on YouTube" on the Shows screen; empty is off |
+| `search_extras` | list of `Label\|package\|link` | Buttons beside the Search filter that send what you typed to another app's own search; `{q}` is the text |
+| `search_keyboard` | string | Keyboard to switch to when Search opens, as `package/.ImeService`; empty leaves it |
+| `extra_clocks` | list of time zone ids or `Label\|zone id` | Small extra clocks under the date; empty is none |
+| `key_apps` | list of `key\|package\|link` | Opens an app from a remote button (a number or a name such as `KEYCODE_PROG_RED`; the link is optional); needs the key service |
 | `live_tv_package`, `live_tv_action` | string | The Live TV app and, if it has no leanback entry, the action to start it with |
 | `live_tv_input_id` | string | Exact system tuner for the Inputs menu's Live TV row; opens its channel collection. Empty keeps automatic selection. Missing input or unsupported collection falls back to the app's normal launch. [HAAM satellite example](../docs/devices/haam-r4.md) |
 | `source_panel_service`, `source_panel_action` | string | The TV's own source panel, for sets with no TvInputManager: a service, or an activity (BYINTEK U4). Without a Live TV app, the Inputs pill opens it directly |

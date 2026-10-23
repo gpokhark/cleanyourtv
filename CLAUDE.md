@@ -1,5 +1,9 @@
 # CLAUDE.md
 
+Upstream's guide for every agent, imported here; where it disagrees with this file, this file wins for this fork.
+
+@AGENTS.md
+
 Guidance for working in this repo. It covers the generic project only; keep anything specific to one TV out of it.
 
 ## What this repo is
@@ -49,7 +53,7 @@ that need them, and an optional programme guide (`EPG_URLS`, Now and Next in the
 ## Conventions
 
 - Match the surrounding Java: comment density, naming, idiom. Config keys are snake_case in `Config.java`.
-- Language: this fork's own builds and docs are English only (see the English-only build above). A pull request to upstream still follows upstream's rules for strings.
+- Language: this fork's own builds and docs are English only (see the English-only build above); `README.vi.md` was removed. A pull request to upstream still follows upstream's rules for strings.
 - New feature: generic code in the launcher, a separate `docs/<FEATURE>.md`, a `show_*` switch. Do not add TV-specific
   content to `README.md` or the shared code; keep it in config.
 - Keep the repo free of device data: no serials, IPs, android_ids, API keys, or `backup/` dumps (`.gitignore` covers
@@ -61,7 +65,7 @@ that need them, and an optional programme guide (`EPG_URLS`, Now and Next in the
 - Commit only when asked. End commit messages with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 - A pull request to upstream comes from its own branch cut from `upstream/main` (`pr/<name>`), never from `dev`. Upstream's
   CI has hard gates: the release APK stays under 480 KB, every key in `themes/README.md` needs a real-TV screenshot row in
-  `docs/switches.md`, and a new switch needs a Keys-table row. Read upstream's `AGENTS.md` first (it is not on `dev` until a sync).
+  `docs/switches.md`, and a new switch needs a Keys-table row. Read `AGENTS.md` first (it came with the sync of 2026-10-23).
 
 ## Syncing from upstream
 

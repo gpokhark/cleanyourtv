@@ -45,6 +45,21 @@ summary which upstream changes were accepted and why, and which were declined.
 
 Confirmed working on the TV on 2026-10-21 after the last sync: the remote buttons (`key_apps`) and Close selected through adb.
 
+## Sync of 2026-10-23 (472 upstream commits, up to `0cd7c271`)
+
+Where both sides changed the same lines, both were kept: `Config` (upstream's library apps, tile menu, cinematic and wallpaper
+options with our keys, the safe-mode guard on upstream's on-TV wallpaper pick), `InputKeyService` (upstream's `onUnbind` repair
+beside our `key_apps` and pause/resume), `LauncherSettingsActivity`, `MainActivity` (`Appearance.apply` before the layout, then
+upstream's library selection and service repair), `DockDecoration` (our `Context` and theme radii with upstream's `evenPadding`),
+`AppAdapter.cornerRadius` (a two-argument overload for upstream's test) and the Hebrew layout (rebuilt from upstream's, with our
+pills, theme colours and extra clocks). Declined: upstream's date beside the clock (`date_format_home`, `date_single_line`); ours
+stays under the clock. Taken as they came: `AGENTS.md`, the font system (`font_*` strings), the wallpaper collection system, the
+library, tile menu and cinematic Home, the new tools and tests. Where upstream's tests wanted something our own features lack:
+Keys-table rows and README tool rows were added, and our own keys are listed in a second block under `SCREENSHOT_WANTED` in
+`tests/test_switches.py` (keep it when that file changes). The release APK is now larger than upstream's 480 KB gate (CI there
+does not apply to `dev`): measure it with `launcherLocales=en` when it matters. `README.vi.md` was removed on purpose, with its
+links, and `tests/test_readme_translations.py` expects two translations, not three.
+
 ## Taken from upstream on purpose
 
 `tileRefresh` (back to Home without rebuilding tiles unless apps changed; replaced our `rebuildOnResume`), the app-coloured

@@ -62,7 +62,7 @@ share their TV's list afterwards, follow [Add a TV list](#add-a-tv-list) below.
 | Path | What it is |
 |---|---|
 | `PROMPT.md` | The prompt people paste into their agent. Brand-neutral; safety rules live here. |
-| `README.md` | Front page: quick start, supported TVs and the TV table, tools, launcher, restore, firmware updates, FAQ. `README.zh-CN.md` and `README.vi.md` are translations. |
+| `README.md` | Front page: quick start, supported TVs and the TV table, tools, launcher, restore, firmware updates, FAQ. `README.zh-CN.md` and `README.ja.md` are translations. |
 | `CONTRIBUTING.md` | The contributor guide for people. "Where does my idea go?" is the routing table. |
 | `SECURITY.md` | Private vulnerability reporting. |
 | `SHOWCASE.md` | Projects built on this repo that live in their own repositories. |

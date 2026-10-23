@@ -37,6 +37,13 @@ SCREENSHOT_WANTED = {
     "wallpaper_moods", "wallpaper_order", "wallpaper_true_color", "wifi_label_width",
     "wifi_status_color",
 }
+# This fork's own keys (Search, Live, Memory, Shows, remote buttons, themes): no screenshot rows yet.
+SCREENSHOT_WANTED |= {
+    "auto_trim", "auto_trim_below_mb", "extra_clocks", "hidden_inputs", "key_apps", "live_channels", "memory_adb",
+    "memory_protect", "my_services", "recent_apps", "search_extras", "search_keyboard", "search_max_results",
+    "search_provider", "search_region", "show_live", "show_memory", "show_search", "show_shows", "theme_style",
+    "youtube_package",
+}
 
 
 def theme_keys():
