@@ -43,7 +43,7 @@ summary which upstream changes were accepted and why, and which were declined.
   apps, keep ours until theirs is shown to work on this TV and to be better; do not swap it in on the strength of the
   code alone.
 
-Confirmed working on the TV on 2026-10-21 after the last sync: the remote buttons (`key_apps`) and Close selected through adb.
+Confirmed working on the TV on 2026-10-23 after the last sync (English-only build): Home with the date in full, all six pills, the two-line Memory pill, and the four remote buttons (`key_apps`). Close all and Close selected through adb were last confirmed on 2026-10-21 and not repeated after this sync.
 
 ## Sync of 2026-10-23 (472 upstream commits, up to `0cd7c271`)
 
