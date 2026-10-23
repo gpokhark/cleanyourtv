@@ -20,7 +20,7 @@ summary which upstream changes were accepted and why, and which were declined.
 | Area | What we keep | Where |
 |---|---|---|
 | Home header | The day, date and extra clocks sit **under the clock, below the pills, full width**. Upstream puts the date in a column beside the clock; with six pills it is cut to "WE…". Same in `layout-iw` | `layout/activity_main.xml`, `layout-iw/activity_main.xml` |
-| Pills | Search, Live, Inputs, Wi-Fi, Memory, Settings; `firstTopButton()` goes Search, Live, Inputs, Wi-Fi. The Hebrew layout has them too (a test checks the ids) | `MainActivity`, layouts |
+| Pills | Search, Live, Inputs, Wi-Fi, Memory, Settings; `firstTopButton()` goes Search, Live, Inputs, Wi-Fi. | `MainActivity`, layouts |
 | Themes | Text and glass colours come from theme attributes (`?attr/text_*`, `Appearance`, `ThemeStyle`, `theme_style`, `theme_mode`); `DockDecoration` and `GlassView` read them. New upstream colours should use the attributes, not hard-coded values | `docs/THEMES.md` |
 | Sky | Upstream's `Sun` sunrise/sunset maths, plus `SkyView.setLocation` that prefers the theme's `sky_latitude`/`sky_longitude`. No location permission | `docs/sky.md` |
 | Crash safety | `CrashWatchdog`, `WatchdogApp`, safe mode. Safe mode also switches off upstream's wallpaper system and `memory_adb`. On `dev` it is always on. Pull request #844 to upstream makes it opt-in (`crash_watchdog`, default off, message in English only): if that is merged, the next sync brings the switch, and our `config.xml` must set it to `true` | `docs/WATCHDOG.md` |
@@ -51,14 +51,15 @@ Where both sides changed the same lines, both were kept: `Config` (upstream's li
 options with our keys, the safe-mode guard on upstream's on-TV wallpaper pick), `InputKeyService` (upstream's `onUnbind` repair
 beside our `key_apps` and pause/resume), `LauncherSettingsActivity`, `MainActivity` (`Appearance.apply` before the layout, then
 upstream's library selection and service repair), `DockDecoration` (our `Context` and theme radii with upstream's `evenPadding`),
-`AppAdapter.cornerRadius` (a two-argument overload for upstream's test) and the Hebrew layout (rebuilt from upstream's, with our
-pills, theme colours and extra clocks). Declined: upstream's date beside the clock (`date_format_home`, `date_single_line`); ours
+`AppAdapter.cornerRadius` (a two-argument overload for upstream's test) and the Hebrew layout (which was then removed, see below). Declined: upstream's date beside the clock (`date_format_home`, `date_single_line`); ours
 stays under the clock. Taken as they came: `AGENTS.md`, the font system (`font_*` strings), the wallpaper collection system, the
 library, tile menu and cinematic Home, the new tools and tests. Where upstream's tests wanted something our own features lack:
 Keys-table rows and README tool rows were added, and our own keys are listed in a second block under `SCREENSHOT_WANTED` in
 `tests/test_switches.py` (keep it when that file changes). The release APK is now larger than upstream's 480 KB gate (CI there
-does not apply to `dev`): measure it with `launcherLocales=en` when it matters. `README.vi.md` was removed on purpose, with its
-links, and `tests/test_readme_translations.py` expects two translations, not three.
+does not apply to `dev`): measure it with `launcherLocales=en` when it matters. All translations were removed on purpose and stay removed: the `values-<language>` folders, `layout-iw` (Hebrew),
+`tests/test_hebrew_resources.py`, the translated READMEs with their links, and the Hebrew screenshots. If upstream edits one of those
+files the sync reports a modify/delete conflict: delete the file. `locales_config.xml` lists only English, and
+`tests/test_readme_translations.py` accepts no translations.
 
 ## Taken from upstream on purpose
 

@@ -62,7 +62,7 @@ share their TV's list afterwards, follow [Add a TV list](#add-a-tv-list) below.
 | Path | What it is |
 |---|---|
 | `PROMPT.md` | The prompt people paste into their agent. Brand-neutral; safety rules live here. |
-| `README.md` | Front page: quick start, supported TVs and the TV table, tools, launcher, restore, firmware updates, FAQ. `README.zh-CN.md` and `README.ja.md` are translations. |
+| `README.md` | Front page: quick start, supported TVs and the TV table, tools, launcher, restore, firmware updates, FAQ. The translated READMEs were removed on this fork. |
 | `CONTRIBUTING.md` | The contributor guide for people. "Where does my idea go?" is the routing table. |
 | `SECURITY.md` | Private vulnerability reporting. |
 | `SHOWCASE.md` | Projects built on this repo that live in their own repositories. |
@@ -153,8 +153,7 @@ someone else's list are judgement calls, so say in the PR which TV you tested on
    needs its strings in every locale.
 5. Moving hard-coded text into resources is welcome; do not bundle unrelated build changes with it.
 6. Build the launcher, set the TV's language (Android 13+: `tools/tv.py 'cmd locale set-app-locales com.gathin.tvhome --locales <tag>'`)
-   and attach a screenshot. Right-to-left languages mirror the layout like Hebrew; `tests/test_hebrew_resources.py`
-   checks that `layout-iw` keeps every view.
+   and attach a screenshot. This fork keeps no translations and no Hebrew layout (`layout-iw`).
 
 ### Add an off-by-default launcher switch
 

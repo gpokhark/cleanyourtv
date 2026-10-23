@@ -45,15 +45,14 @@ that need them, and an optional programme guide (`EPG_URLS`, Now and Next in the
   `cmd notification disallow_listener com.gathin.tvhome/com.gathin.tvhome.MediaWatcher`, then `allow_listener` for the same.
 - Live TV app: `TV_HOST=<ip> tools/build-live-tv.sh` builds and installs it (needs Flutter); `BUILD_ONLY=1` builds the APK and
   stops. Settings are environment variables, see `docs/LIVETV_APP.md`.
-- A smaller launcher with one language: `ORG_GRADLE_PROJECT_launcherLocales=en` before the build keeps only English
-  resources (about 138 KB smaller). Unset keeps every translation.
+- `ORG_GRADLE_PROJECT_launcherLocales=en` before the build also drops AndroidX's own translations (`my-tv/apply.sh` sets it).
 - Permissions granted over ADB: `WRITE_SECURE_SETTINGS` (keyboard guard) and `appops ... GET_USAGE_STATS allow` (Memory pill).
 - `screencap` is blank while video plays; use `dumpsys media_session` to confirm playback.
 
 ## Conventions
 
 - Match the surrounding Java: comment density, naming, idiom. Config keys are snake_case in `Config.java`.
-- Language: this fork's own builds and docs are English only (see the English-only build above); `README.vi.md` was removed. A pull request to upstream still follows upstream's rules for strings.
+- Language: this fork keeps English only, in the build and the docs: the `values-<language>` folders, the Hebrew layout (`layout-iw`) and the translated READMEs were removed from `dev` and stay removed (`docs/UPSTREAM_SYNC.md`). Write docs and strings in English. A pull request to upstream still follows upstream's rules for strings.
 - New feature: generic code in the launcher, a separate `docs/<FEATURE>.md`, a `show_*` switch. Do not add TV-specific
   content to `README.md` or the shared code; keep it in config.
 - Keep the repo free of device data: no serials, IPs, android_ids, API keys, or `backup/` dumps (`.gitignore` covers
