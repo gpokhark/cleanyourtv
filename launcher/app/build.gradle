@@ -13,6 +13,10 @@ android {
         targetSdk 34
         versionCode 7
         versionName '2.6'
+        // Opt-in: keep only these locales' resources (AndroidX's translations too) for a smaller APK, e.g.
+        // ORG_GRADLE_PROJECT_launcherLocales=en. Unset keeps every translation.
+        def locales = providers.gradleProperty('launcherLocales').getOrElse('')
+        if (locales) resourceConfigurations += locales.split(',').collect { it.trim() }
     }
 
     buildTypes {
