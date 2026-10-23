@@ -172,7 +172,6 @@ const _after = 12 * 60 * 60 * 1000;
 const _perChannel = 14;
 
 final _attrId = RegExp(r'\bid="([^"]*)"');
-final _attrChannel = RegExp(r'\bchannel="([^"]*)"');
 final _attrStart = RegExp(r'\bstart="([^"]*)"');
 final _attrStop = RegExp(r'\bstop="([^"]*)"');
 final _displayName = RegExp(r'<display-name[^>]*>(.*?)</display-name>', dotAll: true);
@@ -185,32 +184,49 @@ Future<Map<String, List<List<Object>>>> parseGuide(
     Stream<String> chunks, Map<String, String> wanted, Set<String> skip, int nowMs) async {
   final guideToKey = <String, String>{};
   final out = <String, List<List<Object>>>{};
-  var buf = '';
+  var buf = '';   // the text not yet read
   await for (final chunk in chunks) {
-    buf += chunk;
+    buf = buf.isEmpty ? chunk : buf + chunk;
+    var pos = 0;
+    // Only the top-level tags are looked at, and the rest of a programme nobody asked for is skipped with indexOf, so a
+    // 60 MB guide costs one pass over its text rather than a regex and a copy per programme.
     while (true) {
-      final c = buf.indexOf('<channel ');
-      final p = buf.indexOf('<programme ');
-      if (c < 0 && p < 0) {
-        buf = buf.length > 12 ? buf.substring(buf.length - 12) : buf;   // a tag may be cut in two
+      final lt = buf.indexOf('<', pos);
+      if (lt < 0) {
+        pos = buf.length;
         break;
       }
-      final isChannel = p < 0 || (c >= 0 && c < p);
-      final from = isChannel ? c : p;
-      final close = isChannel ? '</channel>' : '</programme>';
-      final to = buf.indexOf(close, from);
+      if (buf.length - lt < 12) {   // a tag may be cut in two
+        pos = lt;
+        break;
+      }
+      final isProgramme = buf.startsWith('<programme ', lt);
+      if (!isProgramme && !buf.startsWith('<channel ', lt)) {
+        pos = lt + 1;
+        continue;
+      }
+      final close = isProgramme ? '</programme>' : '</channel>';
+      final to = buf.indexOf(close, lt);
       if (to < 0) {
-        buf = buf.substring(from);
+        pos = lt;
         break;
       }
-      final block = buf.substring(from, to + close.length);
-      buf = buf.substring(to + close.length);
-      if (isChannel) {
-        _readChannel(block, wanted, skip, guideToKey);
+      final end = to + close.length;
+      if (isProgramme) {
+        // the channel is read from the opening tag alone, so a programme of a channel nobody asked for is never copied
+        final gt = buf.indexOf('>', lt);
+        final at = buf.indexOf('channel="', lt);
+        if (at > 0 && at < gt) {
+          final q = buf.indexOf('"', at + 9);
+          final key = guideToKey[buf.substring(at + 9, q)];
+          if (key != null) _readProgramme(buf.substring(lt, end), key, nowMs, out);
+        }
       } else {
-        _readProgramme(block, guideToKey, nowMs, out);
+        _readChannel(buf.substring(lt, end), wanted, skip, guideToKey);
       }
+      pos = end;
     }
+    buf = pos >= buf.length ? '' : buf.substring(pos);
   }
   for (final list in out.values) {
     list.sort((a, b) => (a[0] as int).compareTo(b[0] as int));
@@ -232,9 +248,7 @@ void _readChannel(String block, Map<String, String> wanted, Set<String> skip, Ma
   if (key != null && !skip.contains(key)) guideToKey[id] = key;
 }
 
-void _readProgramme(String block, Map<String, String> guideToKey, int nowMs, Map<String, List<List<Object>>> out) {
-  final key = guideToKey[_attrChannel.firstMatch(block)?.group(1)];
-  if (key == null) return;
+void _readProgramme(String block, String key, int nowMs, Map<String, List<List<Object>>> out) {
   final start = parseXmltvTime(_attrStart.firstMatch(block)?.group(1));
   final end = parseXmltvTime(_attrStop.firstMatch(block)?.group(1));
   if (start == null || end == null || end < nowMs - _before || start > nowMs + _after) return;
