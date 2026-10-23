@@ -115,25 +115,39 @@ public class MemoryActivity extends Activity {
         super.onDestroy();
     }
 
-    /** Free memory and swap, from the framework and /proc/meminfo (both readable without permissions). */
+    /** Free RAM and free swap, one line each, from the framework and /proc/meminfo (both readable without permissions). */
     private void refreshHeader() {
         ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
         ((ActivityManager) getSystemService(ACTIVITY_SERVICE)).getMemoryInfo(mi);
-        long swapTotal = 0, swapFree = 0, available = mi.availMem / 1024;
+        long total = mi.totalMem / 1024, swapTotal = 0, swapFree = 0, available = mi.availMem / 1024;
         try (BufferedReader r = new BufferedReader(new java.io.FileReader("/proc/meminfo"))) {
             String line;
             while ((line = r.readLine()) != null) {
-                if (line.startsWith("SwapTotal:")) swapTotal = kb(line);
+                if (line.startsWith("MemTotal:")) total = kb(line);
+                else if (line.startsWith("SwapTotal:")) swapTotal = kb(line);
                 else if (line.startsWith("SwapFree:")) swapFree = kb(line);
                 else if (line.startsWith("MemAvailable:")) available = kb(line);
             }
         } catch (IOException ignored) {
-            // No swap figure: shown as 0%.
+            // No swap figure: shown as none.
         }
-        // Rounded, not truncated: the free share rounded down made the used share read up to a point high.
-        int swapUsed = swapTotal > 0 ? Math.round((swapTotal - swapFree) * 100f / swapTotal) : 0;
         // MemAvailable is the kernel's figure, the one adb tools and free-memory.sh print; availMem counts more as reclaimable.
-        header.setText(getString(R.string.memory_header, mb(available), mb(mi.totalMem / 1024), swapUsed));
+        String ram = getString(R.string.memory_ram, mb(available), capacity(total), percent(available, total));
+        String swap = swapTotal > 0
+                ? getString(R.string.memory_swap, mb(swapFree), capacity(swapTotal), percent(swapFree, swapTotal))
+                : getString(R.string.memory_swap_none);
+        header.setText(ram + "\n" + swap);
+    }
+
+    /** A total as the size it is sold as: 1023 MB of swap is "1 GB", 2097152 kB of RAM is "2 GB", 1.8 GB stays "1.8 GB". */
+    private static String capacity(long kb) {
+        if (kb < 900 * 1024) return mb(kb);
+        float gb = Math.round(kb / 1024f / 1024f * 10) / 10f;
+        return gb == Math.round(gb) ? Math.round(gb) + " GB" : String.format(Locale.US, "%.1f GB", gb);
+    }
+
+    private static int percent(long part, long whole) {
+        return whole > 0 ? Math.round(part * 100f / whole) : 0;
     }
 
     private static long kb(String meminfoLine) {

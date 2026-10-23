@@ -4,7 +4,7 @@ A TV with 2 GB of RAM keeps every app you opened in memory, until it runs out, f
 everything down (keyboards and menus first). The **Memory** pill lists the apps you used recently and closes
 the ones you pick, or all of them. It is off by default (`show_memory`).
 
-- The header shows free RAM and how full the swap is.
+- The header has two lines: free RAM and free swap, each as MB free of the total and the percentage free.
 - Press OK on an app to tick it, then **Close selected**; or press **Close all**, which closes every app you can
   open from the home screen, not only the ones listed. A toast says how much memory that freed, measured from the
   TV's free RAM before and after. Closed apps start fresh the next time you open them.
