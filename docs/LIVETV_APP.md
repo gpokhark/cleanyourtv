@@ -87,8 +87,43 @@ stays part of the link.
 
 `tools/check-live-channels.py` sends the same headers, so a stream that only works with them is no longer reported as
 down. In the iptv-org Hindi, Marathi and English lists, 105 channels carry such headers, and 12 of them answered only
-with the headers on (measured once; the lists change). The channel list is cached on the TV as `channels_v4.json`, so
+with the headers on (measured once; the lists change). The channel list is cached on the TV as `channels_v5.json`, so
 the first start after an update fetches the lists again.
+
+## Programme guide (Now and Next)
+
+Set `EPG_URLS` to one or more XMLTV guides, comma separated, and the player's info bar shows **Now** and **Next** for the
+channels a guide covers. It is off when `EPG_URLS` is empty. A `.gz` guide is unpacked on the fly.
+
+```bash
+EPG_URLS="https://iptv-epg.org/files/epg-in.xml.gz,https://epgshare01.online/epgshare01/epg_ripper_IN1.xml.gz" \
+  TV_HOST=192.168.1.50 tools/build-live-tv.sh
+```
+
+How it works:
+
+- A guide can be 30 MB of text, so the app never holds one: it downloads, unpacks and scans it as a stream in a background
+  thread and keeps only the programmes of the channels it lists, from half an hour ago to twelve hours ahead (at most 14
+  per channel). That is a few hundred programmes in all.
+- A channel is matched to a guide channel by its id (`AajTak.in@HD` matches `Aaj.Tak.in`: case, dots, the feed and an HD
+  part are ignored) and then by its name. When several guides are given the first one that has a channel wins.
+- The result is cached on the TV (`epg_v1.json`) and refreshed on the first start after it is six hours old, or when the
+  channel list changed. If every guide fails to download, the cached programmes stay.
+- Times are shown in the TV's own time zone.
+
+Guides cover only some channels. `tools/check-epg-coverage.py` tells you how many of yours a guide covers, one guide at a
+time and together, before you build; it reads the same `IPTV_PLAYLISTS` settings:
+
+```bash
+IPTV_PLAYLISTS="languages/hin,languages/mar" tools/check-epg-coverage.py --guide https://iptv-epg.org/files/epg-in.xml.gz
+```
+
+In one measurement, the two guides above covered 61 of 132 Indian channels and 67 of 512 in all, because they are
+guides for India. A channel with no guide data shows no Now and Next lines. The guides are third-party services; check
+their terms before relying on them.
+
+`BUILD_ONLY=1 tools/build-live-tv.sh` builds the APK and stops, without needing `TV_HOST` and without sending anything to
+the TV.
 
 ## Checking links before you build
 
@@ -106,7 +141,8 @@ no segments) goes on the block list the app skips. A network error, timeout or 4
 because this computer may simply not reach a server the way the TV does; `--strict` blocks those too. With `--speed` it also measures how fast each live stream delivers video compared with how fast it
 plays and labels it fast, marginal or slow in `assets/stream_notes.txt`: a stream at about 1.0x freezes whenever the
 connection hiccups, however fast your internet is. The app reads that file: a channel whose best link is slow gets an amber "slow" tag next to its
-name and a "slow source, may buffer" line in the banner, and a channel with several links tries the fastest first. The
+name and a "slow source, may buffer" line in the banner. A channel whose best link was measured fast gets a small green dot: it answered and
+delivered video well from the computer that ran the check, which is as close to "working" as a check from elsewhere can say. A channel with several links tries the fastest first. The
 committed `assets/stream_notes.txt` is empty; run the checker with `--speed` before a build to fill it in. The committed
 block list is empty: run the checker before a build to fill it in, since links go stale within days.
 

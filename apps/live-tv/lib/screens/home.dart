@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import '../model/channel.dart';
 import '../provider/channels_provider.dart';
+import '../provider/epg.dart';
 import '../widgets/channel_icon.dart';
 import 'player.dart';
 
@@ -74,6 +75,8 @@ class _HomeState extends State<Home> {
   String? error;
 
   final List<FocusNode> sideNodes = [];
+  final ScrollController _sideScroll = ScrollController();
+  static const _sideItemExtent = 41.0;   // an item is 38 high with a 3 margin
   /// one node per tile, keyed "category/index"; kept until the screen closes
   final Map<String, FocusNode> tileNodes = {};
   double rowExtent = 100;
@@ -127,6 +130,7 @@ class _HomeState extends State<Home> {
   }
 
   void _setChannels(List<Channel> channels) {
+    if (Epg.enabled) Epg.instance.load(channels);   // in the background; the player banner reads it when it shows
     final map = <String, List<Channel>>{'All': channels};
     for (final c in channels) {
       (map[c.category] ??= []).add(c);
@@ -166,6 +170,7 @@ class _HomeState extends State<Home> {
     }
     _switchTimer?.cancel();
     _prebuildTimer?.cancel();
+    _sideScroll.dispose();
     for (final c in _controllers.values) {
       c.dispose();
     }
@@ -201,11 +206,11 @@ class _HomeState extends State<Home> {
     _lastInput = DateTime.now();
     final k = e.logicalKey;
     if (k == LogicalKeyboardKey.arrowUp) {
-      if (i > 0) sideNodes[i - 1].requestFocus();
+      if (i > 0) _focusSide(i - 1);
       return KeyEventResult.handled;
     }
     if (k == LogicalKeyboardKey.arrowDown) {
-      if (i < categories.length - 1) sideNodes[i + 1].requestFocus();
+      if (i < categories.length - 1) _focusSide(i + 1);
       return KeyEventResult.handled;
     }
     if (k == LogicalKeyboardKey.arrowRight || isSelectKey(k)) {
@@ -224,6 +229,27 @@ class _HomeState extends State<Home> {
     return KeyEventResult.ignored;
   }
 
+  /// Scroll the sidebar so the item is visible, then focus it (items off screen are not built, so cannot take focus yet).
+  void _focusSide(int i) {
+    if (_sideScroll.hasClients) {
+      final pos = _sideScroll.position;
+      final top = i * _sideItemExtent;
+      double? to;
+      if (top < pos.pixels) {
+        to = top;
+      } else if (top + _sideItemExtent > pos.pixels + pos.viewportDimension) {
+        to = top + _sideItemExtent - pos.viewportDimension;
+      }
+      if (to != null) _sideScroll.jumpTo(to.clamp(0.0, pos.maxScrollExtent));
+    }
+    final node = sideNodes[i];
+    if (node.context != null) {
+      node.requestFocus();
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => node.requestFocus());
+    }
+  }
+
   KeyEventResult _tileKey(int i, KeyEvent e) {
     if (e is KeyUpEvent) return KeyEventResult.ignored;
     _lastInput = DateTime.now();
@@ -232,7 +258,7 @@ class _HomeState extends State<Home> {
     int? target;
     if (k == LogicalKeyboardKey.arrowLeft) {
       if (i % cols == 0) {
-        sideNodes[selected].requestFocus();
+        _focusSide(selected);
         return KeyEventResult.handled;
       }
       target = i - 1;
@@ -251,7 +277,7 @@ class _HomeState extends State<Home> {
       return KeyEventResult.handled;
     } else if (k == LogicalKeyboardKey.goBack || k == LogicalKeyboardKey.escape) {
       // Back from the grid returns to the sidebar; Back on the sidebar exits
-      sideNodes[selected].requestFocus();
+      _focusSide(selected);
       return KeyEventResult.handled;
     } else {
       return KeyEventResult.ignored;
@@ -335,7 +361,9 @@ class _HomeState extends State<Home> {
           ),
           Expanded(
             child: ListView.builder(
+              controller: _sideScroll,
               padding: EdgeInsets.zero,
+              itemExtent: _sideItemExtent,
               itemCount: categories.length,
               itemBuilder: (context, i) => _SideItem(
                 node: sideNodes[i],
@@ -573,14 +601,23 @@ class _TileState extends State<_Tile> {
                     textAlign: TextAlign.center,
                     style: focused ? _nameFocused : _name,
                   )
-                // the name gives way, so the "slow" tag is never the part that is cut off
+                // the name gives way, so the "slow" tag or green dot is never the part that is cut off
                 : Row(mainAxisSize: MainAxisSize.min, mainAxisAlignment: MainAxisAlignment.center, children: [
                     Flexible(
                       child: Text(widget.channel.name,
                           maxLines: 1, overflow: TextOverflow.ellipsis, style: focused ? _nameFocused : _name),
                     ),
-                    Text('  ·  ${widget.channel.note}',
-                        maxLines: 1, style: const TextStyle(color: Color(0xFFE8A33D), fontSize: 11.5, fontWeight: FontWeight.w600)),
+                    if (widget.channel.slow)
+                      const Text('  ·  slow',
+                          maxLines: 1, style: TextStyle(color: Color(0xFFE8A33D), fontSize: 11.5, fontWeight: FontWeight.w600))
+                    else
+                      // a small green dot: found working and fast
+                      const Padding(
+                        padding: EdgeInsets.only(left: 6),
+                        child: DecoratedBox(
+                            decoration: BoxDecoration(color: Color(0xFF4CAF7A), shape: BoxShape.circle),
+                            child: SizedBox(width: 6, height: 6)),
+                      ),
                   ]),
           ),
         ],

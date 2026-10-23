@@ -7,6 +7,7 @@ import 'package:video_player/video_player.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../model/channel.dart';
+import '../provider/epg.dart';
 import '../widgets/channel_icon.dart';
 import 'home.dart' show isSelectKey;
 
@@ -262,6 +263,35 @@ class _PlayerState extends State<Player> {
     );
   }
 
+  /// "Now" and "Next" from the programme guide, when one is configured and covers this channel.
+  List<Widget> _guideLines() {
+    if (!Epg.enabled) return const [];
+    final (now, next) = Epg.instance.nowNext(channel, DateTime.now());
+    String hm(int ms) {
+      final t = DateTime.fromMillisecondsSinceEpoch(ms);
+      return '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    }
+
+    return [
+      if (now != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text('Now  ${hm(now.start)}–${hm(now.end)}  ${now.title}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+        ),
+      if (next != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Text('Next  ${hm(next.start)}  ${next.title}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13)),
+        ),
+    ];
+  }
+
   Widget _infoBar() {
     return Container(
       width: double.infinity,
@@ -291,9 +321,10 @@ class _PlayerState extends State<Player> {
                 Text(
                   '${channel.category}  ·  ${index + 1} of ${widget.channels.length}  ·  1080p'
                   '${streamIdx > 0 ? '  ·  backup stream ${streamIdx + 1}' : ''}'
-                  '${channel.note.isNotEmpty ? '  ·  slow source, may buffer' : ''}',
+                  '${channel.slow ? '  ·  slow source, may buffer' : ''}',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 13),
                 ),
+                ..._guideLines(),
                 if (audioNote != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 3),

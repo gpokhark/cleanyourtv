@@ -104,7 +104,7 @@ def id_country(tvg_id):
     return base.rsplit(".", 1)[-1].lower() if "." in base else ""
 
 
-def selected(spec, groups, min_height, skip):
+def selected(spec, groups, min_height, skip, with_info=False):
     """Yield (name, url) of the channels the app would list for one IPTV_PLAYLISTS entry (cat= approximated by group)."""
     full = spec.startswith("http")
     params = {}
@@ -145,7 +145,7 @@ def selected(spec, groups, min_height, skip):
             continue
         if cats and attr(info, "group-title").split(";")[0].strip().lower() not in cats:
             continue
-        yield name_of(info), link
+        yield (info, link) if with_info else (name_of(info), link)
 
 
 def probe(item):

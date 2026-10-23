@@ -4,7 +4,8 @@ class Channel {
   final String category;
   final String tvgId;
 
-  /// "slow" when even this channel's best link delivers video at about real-time speed (tools/check-live-channels.py --speed).
+  /// "slow" when even this channel's best link delivers video at about real-time speed, "live" when it was found
+  /// working and fast (tools/check-live-channels.py --speed); empty when not measured or in between.
   final String note;
 
   /// First URL is the main stream; the rest are backups tried when it fails.
@@ -24,6 +25,8 @@ class Channel {
   });
 
   Map<String, String> headersFor(String url) => headers[url] ?? const {};
+
+  bool get slow => note == 'slow';
 
   bool get hasLogo => logoUrl.startsWith('http');
 

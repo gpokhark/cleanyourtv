@@ -47,7 +47,7 @@ class ChannelsProvider {
   /// Carries logos and group-titles (categories) for Indian channels.
   static const logoIndexUrl = 'https://iptv-org.github.io/iptv/countries/in.m3u';
 
-  static const _cacheFile = 'channels_v4.json';
+  static const _cacheFile = 'channels_v5.json';
   static const _timeout = Duration(seconds: 20);
 
   /// Last result saved on disk, so the app can show channels instantly on start.
@@ -344,7 +344,7 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
     }
   }
 
-  // Within a channel the fastest link goes first; a channel whose best link is still slow carries a note.
+  // Within a channel the fastest link goes first; a channel whose best link is still slow carries a note, and one whose best link was measured fast carries "live".
   double ratioOf(String url) {
     final n = notes[url];
     if (n == null) return 5;   // not measured: assume fine, so a measured slow link sorts after it
@@ -354,7 +354,8 @@ List<Map<String, dynamic>> _buildChannels(Map<String, dynamic> args) {
   for (final ch in byKey.values) {
     final urls = ch['s'] as List<String>;
     urls.sort((a, b) => ratioOf(b).compareTo(ratioOf(a)));
-    ch['w'] = (notes[urls.first] ?? '').startsWith('slow') ? 'slow' : '';
+    final best = notes[urls.first] ?? '';
+    ch['w'] = best.startsWith('slow') ? 'slow' : best.startsWith('fast') ? 'live' : '';
   }
 
   final list = byKey.values.toList();
