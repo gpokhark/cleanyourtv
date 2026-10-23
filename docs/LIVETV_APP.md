@@ -110,6 +110,9 @@ How it works:
 - The result is cached on the TV (`epg_v1.json`) and refreshed on the first start after it is six hours old, or when the
   channel list changed. If every guide fails to download, the cached programmes stay.
 - Times are shown in the TV's own time zone.
+- The parse is cheap on purpose: the text is read with a position, and a programme of a channel the app does not list is
+  skipped without being copied. On a 2 GB 32-bit ARM TV, three guides (about 150 MB of text) cost about 5 s of CPU in the
+  background, once every six hours; a first version that copied the buffer for every programme never finished one guide.
 
 Guides cover only some channels. `tools/check-epg-coverage.py` tells you how many of yours a guide covers, one guide at a
 time and together, before you build; it reads the same `IPTV_PLAYLISTS` settings:
@@ -118,7 +121,9 @@ time and together, before you build; it reads the same `IPTV_PLAYLISTS` settings
 IPTV_PLAYLISTS="languages/hin,languages/mar" tools/check-epg-coverage.py --guide https://iptv-epg.org/files/epg-in.xml.gz
 ```
 
-In one measurement, the two guides above covered 61 of 132 Indian channels and 67 of 512 in all, because they are
+More guides help in proportion: in one trial, adding `epg_ripper_PLEX1.xml.gz` (English channels such as movies and
+kids, 4.7 MB) covered 45 more of 512 channels, and the 196 MB `ALL_SOURCES1` file 56 more, which is too large to be worth
+it. In one measurement, the two guides above covered 61 of 132 Indian channels and 67 of 512 in all, because they are
 guides for India. A channel with no guide data shows no Now and Next lines. The guides are third-party services; check
 their terms before relying on them.
 
