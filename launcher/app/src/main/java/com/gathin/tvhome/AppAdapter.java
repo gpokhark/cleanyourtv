@@ -705,6 +705,10 @@ public class AppAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return Color.HSVToColor(hsv);
     }
 
+    static float cornerRadius(int tileWidthPx, float density) {
+        return cornerRadius(tileWidthPx, density, 16 * density);   // the default style's radius_tile
+    }
+
     /** Corner radius for a tile of this width: {@code baseRadiusPx} (radius_tile, 16dp by default) at the design width, proportionally less when smaller. */
     static float cornerRadius(int tileWidthPx, float density, float baseRadiusPx) {
         return baseRadiusPx * Math.min(1f, tileWidthPx / (DESIGN_W_DP * density));

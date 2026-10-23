@@ -20,6 +20,8 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final Paint band = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint edge = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final float radius;
+    /** radius_tile of the theme style: what the tiles' corners are drawn with. */
+    private final float tileRadius;
     private final RectF rect = new RectF();
 
     /** Extra band below the tiles for their names (always_show_names), in px. */
@@ -43,6 +45,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         this.dockSize = dockSize;
         this.density = density;
         this.radius = Appearance.dimension(ctx, R.attr.radius_dock);
+        this.tileRadius = Appearance.dimension(ctx, R.attr.radius_tile);
         this.namesRoom = names ? 22 * density : 0;
         this.lightGlass = lightGlass;
         this.evenPadding = evenPadding;
@@ -109,18 +112,18 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
         // outwards and still keeps about the band's top margin from its rounded end.
         float sidePad = 22 * density;
         float side = Math.max(0f, Math.min(sidePad, Math.min(rect.left, parent.getWidth() - rect.right) - density));
-        float radius = AppAdapter.cornerRadius(cardWidth, density);
+        float corner = AppAdapter.cornerRadius(cardWidth, density, tileRadius);
         if (evenPadding) {
             // The same padding on all four sides, so the band's corners are concentric with the tiles' everywhere.
             int inner = parent.getWidth() - parent.getPaddingLeft() - parent.getPaddingRight();
             float room = Math.min(rect.top, Math.min(rect.left, parent.getWidth() - rect.right)) - density;
             float even = evenPaddingPx(inner, dockSize, cardWidth, room);
             rect.inset(-even, -even);
-            radius = radiusPx(radius, even);
+            corner = radiusPx(corner, even);
         } else {
-            // dock_even_padding off: the band as before, with its fixed 26 dp corners.
+            // dock_even_padding off: the band as before, with the style's dock corners (26 dp by default).
             rect.inset(-side, -pad);
-            radius = 26 * density;
+            corner = radius;
         }
         rect.bottom += namesRoom;
         if (lightGlass && (rect.top != shaderTop || rect.bottom != shaderBottom)) {
@@ -130,7 +133,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
             shaderTop = rect.top;
             shaderBottom = rect.bottom;
         }
-        c.drawRoundRect(rect, radius, radius, band);
-        c.drawRoundRect(rect, radius, radius, edge);
+        c.drawRoundRect(rect, corner, corner, band);
+        c.drawRoundRect(rect, corner, corner, edge);
     }
 }
