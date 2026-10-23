@@ -205,6 +205,27 @@ A Flutter app runs its own engine, so it uses memory while it is open and, like 
 the TV needs the space. On a small TV, close it after use (or force-stop `com.nk.live_tv`) rather than leaving
 it in the background.
 
+## Other IPTV players considered
+
+Checked, not installed or shipped.
+
+**StreamVault** ([Davidona/StreamVault-IPTV](https://github.com/Davidona/StreamVault-IPTV), v1.2.2, source-available
+non-commercial licence). A general IPTV client for Android TV: M3U, Xtream, Stalker and Jellyfin sources, Stremio
+add-ons, XMLTV guide, timeshift, multi-view, DVR and downloads. It has no channels of its own.
+
+- Size: the APK is 50.2 MB (arm64-v8a and armeabi-v7a, minSdk 25). About 12 MB of that is `libtorrent4j`, a BitTorrent
+  engine, and about 19 MB is dex code.
+- Permissions: `INTERNET`, network and Wi-Fi state, `POST_NOTIFICATIONS`, `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED`,
+  foreground services (data sync, media playback), `SCHEDULE_EXACT_ALARM`, `REQUEST_INSTALL_PACKAGES` (self-update from
+  GitHub Releases), and `READ_EPG_DATA`, `WRITE_EPG_DATA`, `BIND_TV_INPUT` (registers a TV input and writes to the
+  system guide database).
+- Why not: the free-channel use case is already covered here at a lower memory cost, and it adds a boot receiver,
+  background services, a self-installer and a torrent engine on a TV with little RAM. The torrent and download features
+  also sit badly with the rule against ripping streamed content. Only multi-view, timeshift and a Jellyfin client are
+  new.
+- If it is ever tried: deny the boot receiver and installer permission, and compare memory before and after
+  (`tv-measure`).
+
 ## Credits
 
 `apps/live-tv` is a fork, reworked for TV remotes and low-memory TVs, of the `tv/master` branch of
