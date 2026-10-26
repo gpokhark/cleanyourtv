@@ -1661,6 +1661,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         } else {
             hero.setY(y);
+            // onPause cancels the fade-ins, and a second Home during one lands on the same tile, which starts none:
+            // finish them, or the shelf and the glow stay dim until focus moves to another app.
+            if (hero.getAlpha() < 1f) hero.animate().alpha(1f).setDuration(260).start();
+            if (ambientGlow && color == ambientColor && ambient.getAlpha() < 1f) {
+                ambient.animate().alpha(1f).setDuration(600).start();
+            }
         }
     }
 
