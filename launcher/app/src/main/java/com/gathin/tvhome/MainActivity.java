@@ -1158,6 +1158,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         if (handleSettingsKey(event)) return true;
+        if (holdOk(event)) return true;
         if (tileMenuEnabled && !reordering && openPopup == null && cardPrompt == null
                 && event.getKeyCode() == KeyEvent.KEYCODE_MENU) {
             int position = focusedTilePosition();
@@ -3057,9 +3058,73 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
      * Remove from Home takes the shortcut off (only with the app library on, where one press adds it back);
      * App info opens the TV's page for the app, which is what holding OK used to do.
      */
+    // ---- hold OK ---------------------------------------------------------------------------------
+    // View's own long click misses on some remotes: an IR remote that sends its repeat frames as separate
+    // presses, or a Bluetooth one whose repeats land after a tile rebind, never holds one DOWN long enough.
+    // So the launcher times the hold itself: OK down on a tile, still down (or still repeating) after
+    // HOLD_OK_MS opens the tile menu, and the UP that follows is eaten so it doesn't also open the app.
+
+    private static final long HOLD_OK_MS = 550;
+    private long holdOkDown = -1;
+    private int holdOkPosition = -1;
+    private boolean holdOkFired;
+    private final Runnable holdOkTimer = this::fireHoldOk;
+
+    private static boolean isOkKey(int code) {
+        return code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER
+                || code == KeyEvent.KEYCODE_NUMPAD_ENTER || code == KeyEvent.KEYCODE_BUTTON_A;
+    }
+
+    /** True when the event belongs to a hold that opened the tile menu and must not reach the tile. */
+    private boolean holdOk(KeyEvent event) {
+        if (!tileMenuEnabled || !isOkKey(event.getKeyCode())) return false;
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            if (event.getRepeatCount() == 0) {
+                holdOkFired = false;
+                handler.removeCallbacks(holdOkTimer);
+                holdOkPosition = reordering || openPopup != null || cardPrompt != null ? -1 : focusedTilePosition();
+                if (holdOkPosition < 0 || holdOkPosition >= adapter.appCount()) {
+                    holdOkDown = -1;
+                    return false;
+                }
+                holdOkDown = event.getDownTime();
+                handler.postDelayed(holdOkTimer, HOLD_OK_MS);
+                return false;
+            }
+            if (holdOkFired) return true;
+            if (holdOkDown >= 0 && event.getEventTime() - holdOkDown >= HOLD_OK_MS) {
+                fireHoldOk();
+                return true;
+            }
+            return false;
+        }
+        // ACTION_UP
+        handler.removeCallbacks(holdOkTimer);
+        holdOkDown = -1;
+        if (holdOkFired) {
+            holdOkFired = false;
+            View f = getCurrentFocus();
+            if (f != null) f.setPressed(false);
+            return true;
+        }
+        return false;
+    }
+
+    private void fireHoldOk() {
+        handler.removeCallbacks(holdOkTimer);
+        if (holdOkDown < 0 || holdOkFired) return;
+        holdOkFired = true;
+        if (openPopup != null || reordering) return;   // View's own long click got there first
+        int position = holdOkPosition;
+        if (position < 0 || position >= adapter.appCount() || position != focusedTilePosition()) return;
+        View card = getCurrentFocus();
+        if (card != null) card.setPressed(false);
+        onTileLongPress(position, card);
+    }
+
     @Override
     public void onTileLongPress(int position, View card) {
-        if (reordering) return;
+        if (reordering || openPopup != null) return;
         String key = adapter.keyAt(position);
         String pkg = adapter.packageAt(position);
         // Empty dock slots and the Default-home tile carry the launcher's own package: no menu for them.
