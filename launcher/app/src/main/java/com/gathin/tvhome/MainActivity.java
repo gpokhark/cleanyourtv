@@ -3067,6 +3067,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private static final long HOLD_OK_MS = 550;
     private long holdOkDown = -1;
     private int holdOkPosition = -1;
+    private String holdOkKey;    // the app under OK when it went down; a tile rebuild can move another app to that slot
     private boolean holdOkFired;
     private final Runnable holdOkTimer = this::fireHoldOk;
 
@@ -3083,7 +3084,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                 holdOkFired = false;
                 handler.removeCallbacks(holdOkTimer);
                 holdOkPosition = reordering || openPopup != null || cardPrompt != null ? -1 : focusedTilePosition();
-                if (holdOkPosition < 0 || holdOkPosition >= adapter.appCount()) {
+                holdOkKey = holdOkPosition < 0 || holdOkPosition >= adapter.appCount() ? null : adapter.keyAt(holdOkPosition);
+                if (holdOkKey == null) {
                     holdOkDown = -1;
                     return false;
                 }
@@ -3101,6 +3103,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // ACTION_UP
         handler.removeCallbacks(holdOkTimer);
         holdOkDown = -1;
+        holdOkKey = null;
         if (holdOkFired) {
             holdOkFired = false;
             View f = getCurrentFocus();
@@ -3117,6 +3120,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         if (openPopup != null || reordering) return;   // View's own long click got there first
         int position = holdOkPosition;
         if (position < 0 || position >= adapter.appCount() || position != focusedTilePosition()) return;
+        // Same slot is not enough: tiles may have been rebuilt during the hold, so the app must match too.
+        if (!holdOkKey.equals(adapter.keyAt(position))) return;
         View card = getCurrentFocus();
         if (card != null) card.setPressed(false);
         onTileLongPress(position, card);
